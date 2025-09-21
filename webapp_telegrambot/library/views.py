@@ -19,7 +19,7 @@ class BookViewSet(viewsets.ModelViewSet):
     Book endpoints:
     - list, retrieve, create, update, delete
     - search (by title, author, ISBN)
-    - extra action: top-rated, popular 
+    - extra action: top-rated, popular
     """
 
     queryset = Book.objects.all().prefetch_related("authors")
@@ -31,9 +31,7 @@ class BookViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def top_rated(self, request):
         """Get top rated books by avg review rating"""
-        books = Book.objects.annotate(avg_rating=Avg("reviews__rating")).order_by(
-            "-avg_rating"
-        )[:10]
+        books = Book.objects.annotate(avg_rating=Avg("reviews__rating")).order_by("-avg_rating")[:10]
         serializer = self.get_serializer(books, many=True)
         return Response(serializer.data)
 
@@ -102,20 +100,19 @@ class UserBookViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=["get"])
     def by_status(self, request):
         """
         Get books filtered by a specific status.
         Example URL: /books/by_status/?status=wishlist
         """
-        status = request.query_params.get('status')
+        status = request.query_params.get("status")
         if status:
             qs = self.get_queryset().filter(status=status)
             serializer = self.get_serializer(qs, many=True)
             return Response(serializer.data)
         return Response({"error": "Status parameter is required"}, status=400)
-    
-    
+
     # @action(detail=False, methods=["get"])
     # def wishlist(self, request):
     #     qs = self.get_queryset().filter(status="wishlist")
