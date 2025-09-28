@@ -116,10 +116,7 @@ def run_etl():
                     if primary_author:
                         raw_author_names.add(primary_author)
                 except Exception as e:
-                    print(f"No author in {line_number}:{e} . geting the store author.")
-                
-                if primary_author != 'Holly Black':
-                    continue             
+                    print(f"No author in {line_number}:{e} . geting the store author.")                   
                 
                 # B. Get names from the 'store' field
                 store_authors = parse_authors_from_store(record.get('store'))
@@ -133,9 +130,6 @@ def run_etl():
                     
                     if not canonical_name:
                         continue
-                    
-                    if canonical_name != 'Holly Black':
-                        continue             
                     
                     if primary_author and canonical_name == primary_author:
                         author_avatar = record.get('author', {}).get('avatar')

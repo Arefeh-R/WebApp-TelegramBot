@@ -1,12 +1,12 @@
 
 import json
 
-file = "C:Users\ASUS\Downloads\Programs\meta_Books.jsonl"
+file = "C:Users\ASUS\Downloads\Programs\Books.jsonl"
 with open(file, 'r') as fp:
     i = 0
     for line in fp:
-        if i == 50:
+        if i == 10:
             break
-        if json.loads(line.strip()).get('author') is None:
-            print(json.loads(line.strip()))
+        print(json.loads(line.strip()))
+        print()
         i += 1
