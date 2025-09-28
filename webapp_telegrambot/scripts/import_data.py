@@ -4,7 +4,7 @@ from psycopg2 import sql
 
 # --- Configuration ---
 DATABASE_URL = "dbname=webapp_bot user=postgres password=1111 host=localhost"
-JSONL_FILE_PATH = "A:\WebApp-TelegramBot\webapp_telegrambot\scripts\sample.jsonl"
+JSONL_FILE_PATH = "C:Users\ASUS\Downloads\Programs\meta_Books.jsonl"
 
 # --- Helper Functions for Data Cleaning ---
 
@@ -109,12 +109,18 @@ def run_etl():
                 
                 # Collect all potential author names
                 raw_author_names = set()
-
-                # A. Get primary author name
-                primary_author = record.get('author', {}).get('name')
-                if primary_author:
-                    raw_author_names.add(primary_author)
-                    
+                
+                # A. Get primary author name                
+                try:
+                    primary_author = record.get('author', {}).get('name')
+                    if primary_author:
+                        raw_author_names.add(primary_author)
+                except Exception as e:
+                    print(f"No author in {line_number}:{e} . geting the store author.")
+                
+                if primary_author != 'Holly Black':
+                    continue             
+                
                 # B. Get names from the 'store' field
                 store_authors = parse_authors_from_store(record.get('store'))
                 for name in store_authors:
@@ -124,15 +130,19 @@ def run_etl():
                 book_author_ids = []
                 for raw_name in raw_author_names:
                     canonical_name = clean_author_name(raw_name)
+                    
                     if not canonical_name:
                         continue
                     
-                    author_avatar = record.get('author', {}).get('avatar')
-                    print()
-                    if canonical_name == primary_author:
+                    if canonical_name != 'Holly Black':
+                        continue             
+                    
+                    if primary_author and canonical_name == primary_author:
+                        author_avatar = record.get('author', {}).get('avatar')
                         author_about = json.dumps(record.get('author', {}).get('about', [])) # Store 'about' as JSON string/TEXT
                     else:
                         author_about = None # No 'about' info for secondary authors
+                        author_avatar = None # No avatar for secondary authors
                         
                     try:
                         # Attempt to INSERT the author (Will fail if UNIQUE constraint violated)
