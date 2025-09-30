@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.db import models
-
+from django.core.exceptions import ValidationError
 
 User = settings.AUTH_USER_MODEL
 
@@ -32,7 +32,8 @@ class Categorie(models.Model):
 class Review(models.Model):
     review_id = models.AutoField(primary_key=True)
     book = models.ForeignKey("Book", models.DO_NOTHING, db_column="book_id")
-    user_id = models.CharField(max_length=255)
+    amazon_user_id = models.CharField(max_length=255, db_column="amazon_user_id", blank=True, null=True)
+    user = models.ForeignKey(User,on_delete=models.SET_NULL, related_name='reviews', blank=True, null=True)
     rating = models.DecimalField(max_digits=3, decimal_places=1)
     title = models.TextField(blank=True, null=True)
     review_text = models.TextField(db_column="review_text", blank=True, null=True)
@@ -46,6 +47,12 @@ class Review(models.Model):
     class Meta:
         managed = False
         db_table = "reviews"
+        
+    def clean(self):
+
+        if not self.amazon_user_id and not self.user:
+            raise ValidationError("A Review must be associated with either an Amazon User ID or an application User.")
+
 
 
 class Book(models.Model):
@@ -53,11 +60,9 @@ class Book(models.Model):
     main_category = models.CharField(max_length=255, blank=True, null=True)
     title = models.TextField()
     subtitle = models.TextField(blank=True, null=True)
-    authors = models.ManyToManyField('Author', through="BookAuthor")
-    categories = models.ManyToManyField('Categorie', through="BookCategorie")
-    average_rating = models.DecimalField(
-        max_digits=3, decimal_places=2, blank=True, null=True
-    )
+    authors = models.ManyToManyField("Author", through="BookAuthor")
+    categories = models.ManyToManyField("Categorie", through="BookCategorie")
+    average_rating = models.DecimalField(max_digits=3, decimal_places=2, blank=True, null=True)
     rating_number = models.IntegerField(blank=True, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     features = models.TextField(blank=True, null=True)
@@ -67,6 +72,9 @@ class Book(models.Model):
     tsv_content = models.TextField(blank=True, null=True)  # This field type is a guess.
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    isbn_13 = models.CharField(max_length=13, blank=True, null=True, verbose_name="ISBN 13" )
+    isbn_10 = models.CharField(max_length=13, blank=True, null=True, verbose_name="ISBN 10" )
+    publication_date = models.DateField(blank=True, null=True)
 
     class Meta:
         managed = False
@@ -74,8 +82,8 @@ class Book(models.Model):
 
 
 class BookAuthor(models.Model):
-    book = models.ForeignKey('Book', models.DO_NOTHING, db_column="book_id")
-    author = models.ForeignKey('Author', models.DO_NOTHING, db_column="author_id")
+    book = models.ForeignKey("Book", models.DO_NOTHING, db_column="book_id")
+    author = models.ForeignKey("Author", models.DO_NOTHING, db_column="author_id")
 
     class Meta:
         managed = False
@@ -84,8 +92,10 @@ class BookAuthor(models.Model):
 
 
 class BookCategorie(models.Model):
-    book = models.ForeignKey('Book', models.DO_NOTHING, db_column="book_id")
-    category = models.ForeignKey("Categorie", models.DO_NOTHING, db_column="category_id")
+    book = models.ForeignKey("Book", models.DO_NOTHING, db_column="book_id")
+    category = models.ForeignKey(
+        "Categorie", models.DO_NOTHING, db_column="category_id"
+    )
 
     class Meta:
         managed = False
@@ -95,7 +105,7 @@ class BookCategorie(models.Model):
 
 class Image(models.Model):
     image_id = models.AutoField(primary_key=True)
-    book = models.ForeignKey('Book', models.DO_NOTHING, db_column="book_id")
+    book = models.ForeignKey("Book", models.DO_NOTHING, db_column="book_id")
     large_url = models.TextField()
     variant = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -107,7 +117,7 @@ class Image(models.Model):
 
 
 class Comment(models.Model):
-    review = models.ForeignKey('Review', related_name="comments", on_delete=models.CASCADE)
+    review = models.ForeignKey("Review", related_name="comments", on_delete=models.CASCADE)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="comments", on_delete=models.CASCADE)
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -129,7 +139,7 @@ class UserBook(models.Model):
     ]
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="user_books", on_delete=models.CASCADE)
-    book = models.ForeignKey('Book', related_name="user_books", on_delete=models.CASCADE)
+    book = models.ForeignKey("Book", related_name="user_books", on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="wishlist")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -140,3 +150,18 @@ class UserBook(models.Model):
 
     def __str__(self):
         return f"{self.user.get_username()} - {self.book.title} ({self.status})"
+
+
+class ReviewLike(models.Model):
+
+    review = models.ForeignKey('Review', related_name='likes', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, related_name='review_likes', on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'review') #each user can like a review only once
+        verbose_name = "Review Like"
+        verbose_name_plural = "Review Likes"
+
+    def __str__(self):
+        return f"{self.user.get_username()} likes Review {self.review.review_id}"

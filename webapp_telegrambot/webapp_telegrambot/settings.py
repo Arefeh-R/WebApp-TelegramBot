@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'library',
-    'api1'
+    'api1',
+    'telegram_bot'
 ]
 
 MIDDLEWARE = [

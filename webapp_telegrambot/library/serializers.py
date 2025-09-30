@@ -30,21 +30,31 @@ class BookSerializer(serializers.ModelSerializer):
         ]
 
 
+# Assuming your user model has a 'username' or 'get_full_name' method
 class ReviewSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
+    
+    reviewer_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Review
-        fields = [
-            "id",
-            "user",
-            "book",
-            "rating",
-            "content",
-            "created_at",
-            "updated_at",
-        ]
-        read_only_fields = ["user", "created_at", "updated_at"]
+        fields = (
+            'review_id', 'book', 'rating', 'title', 'review_text', 
+            'helpful_vote', 'verified_purchase', 'review_date', 
+            'reviewer_display' # Include the new display field
+            # Do NOT include 'user' or 'amazon_user_id' in writable fields 
+            # as they are set in the view
+        )
+        read_only_fields = ('helpful_vote',)
+
+    def get_reviewer_display(self, obj):
+        """Returns the application user's name or the Amazon user ID."""
+        if obj.user:
+            # Review from app user: return username or display name
+            return obj.user.get_username() # or obj.user.email, etc.
+        elif obj.amazon_user_id:
+            # Review from bulk imported data
+            return f"Amazon User: {obj.amazon_user_id}"
+        return "Anonymous Reviewer"
 
 
 class CommentSerializer(serializers.ModelSerializer):
