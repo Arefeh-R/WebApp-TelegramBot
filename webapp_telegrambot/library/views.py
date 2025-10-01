@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.db.models import Avg, F, Count 
 from .models import Book, Review, Comment, UserBook, ReviewLike 
+from .permissions import IsOwnerOrReadOnly
 from .serializers import (
     BookSerializer,
     ReviewSerializer,
@@ -47,7 +48,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     queryset = Review.objects.all().select_related("book", "user") 
     serializer_class = ReviewSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -91,18 +92,23 @@ class CommentViewSet(viewsets.ModelViewSet):
     
     queryset = Comment.objects.all().select_related("review", "user") 
     serializer_class = CommentSerializer
-    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        queryset = self.queryset
+        queryset = super().get_queryset()
         review_pk = self.kwargs.get("review_pk")
         if review_pk:
             queryset = queryset.filter(review__pk=review_pk)
             
-        return queryset.order_by('-created_at') # Good practice: order by date
-
+        return queryset.order_by('-created_at') # order by date
+ 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        review_pk = self.kwargs.get("review_pk")
+        if review_pk:
+            review = Review.objects.get(pk=review_pk)
+            serializer.save(user=self.request.user, review=review)
+        else:
+            serializer.save(user=self.request.user)
 
 
 class UserBookViewSet(viewsets.ModelViewSet):
@@ -114,14 +120,12 @@ class UserBookViewSet(viewsets.ModelViewSet):
     """
 
     serializer_class = UserBookSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        # Queryset is correct: UserBook has FKs to 'user' and 'book'
         return UserBook.objects.filter(user=self.request.user).select_related("book")
 
     def perform_create(self, serializer):
-        # The logic is correct as the UserBook model has a ForeignKey to the User model.
         serializer.save(user=self.request.user)
 
     @action(detail=False, methods=["get"])
@@ -131,15 +135,13 @@ class UserBookViewSet(viewsets.ModelViewSet):
         Example URL: /books/by_status/?status=wishlist
         """
         status_param = request.query_params.get("status")
-        # Ensure status is one of the allowed choices from the model
         valid_statuses = [choice[0] for choice in UserBook.STATUS_CHOICES]
 
         if status_param and status_param in valid_statuses:
             qs = self.get_queryset().filter(status=status_param)
             serializer = self.get_serializer(qs, many=True)
             return Response(serializer.data)
-        
-        # Improved error response
+
         return Response(
             {"error": f"Status parameter is required and must be one of: {', '.join(valid_statuses)}"}, 
             status=status.HTTP_400_BAD_REQUEST
