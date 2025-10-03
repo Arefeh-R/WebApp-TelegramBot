@@ -1,6 +1,7 @@
 from django.conf import settings
 from django.db import models
 from django.core.exceptions import ValidationError
+from django.db.models import Avg, Count
 
 User = settings.AUTH_USER_MODEL
 
@@ -31,13 +32,13 @@ class Category(models.Model):
 
 class Review(models.Model):
     review_id = models.AutoField(primary_key=True)
-    book = models.ForeignKey("Book", models.DO_NOTHING, db_column="book_id")
+    book = models.ForeignKey("Book", models.DO_NOTHING, db_column="book_id", related_name='reviews')
     amazon_user_id = models.CharField(max_length=255, db_column="amazon_user_id", blank=True, null=True)
     user = models.ForeignKey(User,on_delete=models.SET_NULL, related_name='reviews', blank=True, null=True)
     rating = models.DecimalField(max_digits=3, decimal_places=1)
     title = models.TextField(blank=True, null=True)
     review_text = models.TextField(db_column="review_text", blank=True, null=True)
-    helpful_vote = models.IntegerField(default=0)
+    helpful_vote = models.IntegerField(default=0)# reviewlikes count
     verified_purchase = models.BooleanField(default=False)
     review_date = models.DateTimeField(blank=True, null=True)
     images_jsonb = models.JSONField(blank=True, null=True)
@@ -49,7 +50,6 @@ class Review(models.Model):
         db_table = "reviews"
         
     def clean(self):
-
         if not self.amazon_user_id and not self.user:
             raise ValidationError("A Review must be associated with either an Amazon User ID or an application User.")
 
@@ -79,6 +79,24 @@ class Book(models.Model):
     class Meta:
         managed = False
         db_table = "books"
+        
+    def recalculate_ratings(self):
+
+        review_queryset = self.reviews.all()
+
+        aggregates = review_queryset.aggregate(
+            avg_rating=Avg('rating'),
+            count_rating=Count('rating', distinct=True) # Count of non-null ratings
+        )
+
+        avg = aggregates['avg_rating']
+        count = aggregates['count_rating']
+
+        self.average_rating = round(avg, 2) if avg is not None else None
+        self.rating_number = count if count is not None else 0
+        
+        self.save(update_fields=['average_rating', 'rating_number', 'updated_at'])
+
 
 
 class BookAuthor(models.Model):

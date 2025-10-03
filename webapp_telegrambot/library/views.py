@@ -105,7 +105,17 @@ class ReviewViewSet(viewsets.ModelViewSet):
         book_pk = serializer.validated_data.get("book").pk
         if Review.objects.filter(book__pk=book_pk, user=user).exists():
             raise ValidationError("You have already reviewed this book.")
-        serializer.save(user=user)
+        review = serializer.save(user=user)
+        review.book.recalculate_ratings()
+        
+    def perform_update(self, serializer):
+        review = serializer.save()
+        review.book.recalculate_ratings()
+
+    def perform_destroy(self, instance):
+        book_to_update = instance.book 
+        instance.delete()
+        book_to_update.recalculate_ratings()
 
     @action(
         detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated]

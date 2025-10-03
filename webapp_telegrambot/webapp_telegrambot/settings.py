@@ -9,7 +9,8 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
+# This dictates token lifespan and configuration
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -18,6 +19,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
+
+AUTH_USER_MODEL = 'user_app.CustomUser'
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-#rrnccjv#%gi45gddusbkmr1zp4i^z$8ozercoycs_=b(ne)g6'
@@ -40,7 +43,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'library',
     'api1',
-    'telegram_bot'
+    'telegram_bot',
+    'user_app',
 ]
 
 MIDDLEWARE = [
@@ -112,10 +116,26 @@ AUTH_PASSWORD_VALIDATORS = [
 # or allow read-only access for unauthenticated users.
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        # JWT for API Authentication
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # Session for DRF browsable API / Admin
+        'rest_framework.authentication.SessionAuthentication', 
+    ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly'
-    ]
-    
+        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+    ]    
+}
+
+# Simple JWT configuration
+
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60), # Set a reasonable time
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': True,
+    'UPDATE_LAST_LOGIN': True,
+    # You may want to customize token claims here, e.g., adding user_type to the payload
 }
 
 
