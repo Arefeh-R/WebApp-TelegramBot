@@ -79,23 +79,6 @@ class Book(models.Model):
     class Meta:
         managed = False
         db_table = "books"
-        
-    def recalculate_ratings(self):
-
-        review_queryset = self.reviews.all()
-
-        aggregates = review_queryset.aggregate(
-            avg_rating=Avg('rating'),
-            count_rating=Count('rating', distinct=True) # Count of non-null ratings
-        )
-
-        avg = aggregates['avg_rating']
-        count = aggregates['count_rating']
-
-        self.average_rating = round(avg, 2) if avg is not None else None
-        self.rating_number = count if count is not None else 0
-        
-        self.save(update_fields=['average_rating', 'rating_number', 'updated_at'])
 
 
 

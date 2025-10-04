@@ -1,5 +1,7 @@
 from rest_framework import serializers
 from .models import CustomUser
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 class UserSerializer(serializers.ModelSerializer):
     """
@@ -30,6 +32,14 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             'password': {'write_only': True}
         }
 
+    def validate_password(self, value):
+        try:
+            validate_password(value) 
+        except ValidationError as e:
+            raise serializers.ValidationError(e.messages)
+            
+        return value
+
     def validate(self, data):
         """Ensure password and password2 match."""
         if data['password'] != data['password2']:
@@ -49,3 +59,46 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         )
         # Default user_type is 'AU' (App User) as defined in the model
         return user
+
+class PasswordChangeSerializer(serializers.Serializer):
+    """Serializer for password change requests."""
+    
+    # Input fields
+    old_password = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
+    new_password = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
+    new_password_confirm = serializers.CharField(required=True, write_only=True, style={'input_type': 'password'})
+
+    def validate_new_password(self, value):
+        """Apply strong password validation to the new password."""
+        try:
+            # Use Django's built-in password validators
+            validate_password(value) 
+        except ValidationError as e:
+            raise serializers.ValidationError(e.messages)
+            
+        return value
+
+    def validate(self, data):
+        """
+        Validate:
+        1. Does the old_password match the user's current password?
+        2. Do the new_password and new_password_confirm match?
+        """
+        user = self.context['request'].user
+        old_password = data.get('old_password')
+        new_password = data.get('new_password')
+        new_password_confirm = data.get('new_password_confirm')
+
+        # 1. Check if the old password is correct
+        if not user.check_password(old_password):
+            raise serializers.ValidationError({"old_password": "Wrong password. Please enter your current password correctly."})
+
+        # 2. Check if the new passwords match
+        if new_password != new_password_confirm:
+            raise serializers.ValidationError({"new_password_confirm": "The two password fields didn't match."})
+
+        # 3. Check if new password is the same as the old password (Optional, but good practice)
+        if user.check_password(new_password):
+            raise serializers.ValidationError({"new_password": "The new password cannot be the same as the old password."})
+
+        return data

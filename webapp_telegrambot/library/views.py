@@ -12,6 +12,7 @@ from .serializers import (
     CommentSerializer,
     UserBookSerializer,
 )
+from utils.pagination import CustomPageNumberPagination
 from .services.openlibrary_sevice import search_book_in_openlibrary
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -22,13 +23,14 @@ class BookViewSet(viewsets.ModelViewSet):
 
     queryset = Book.objects.all().prefetch_related("authors")
     serializer_class = BookSerializer
+    pagination_class = CustomPageNumberPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
 
     search_fields = ["title", "authors__name", "=isbn_13", "isbn_10", "=parent_asin"]
 
     ordering_fields = ["publication_date", "average_rating"]
 
-    @action(detail=False, methods=["get"])
+    @action(detail=False, methods=["get"], url_path="top-rated")
     def top_rated(self, request):
 
         books = Book.objects.exclude(average_rating__isnull=True).order_by(
@@ -37,21 +39,18 @@ class BookViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(books, many=True)
         return Response(serializer.data)
 
-    # Custom action for searching Open Library as a fallback
     @action(detail=False, methods=["get"], url_path="search-external")
     def search_external(self, request):
-        # 1. READ THE NEW PARAMETERS FROM THE REQUEST
+
         query = request.query_params.get("query")
         query_type = request.query_params.get("query_type")
         
-        # 2. VALIDATE REQUIRED PARAMETERS
         if not query or not query_type:
             return Response(
                 {"detail": "Must provide both 'query' and 'query_type' (title, author, or isbn)."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
             
-        # Ensure query_type is one of the supported values
         supported_types = ["title", "author", "isbn"]
         if query_type not in supported_types:
             return Response(
@@ -59,14 +58,11 @@ class BookViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # 3. FALLBACK TO OPEN LIBRARY API
-        # The service function 'search_book_in_openlibrary' will handle the API routing
+
         data = search_book_in_openlibrary(query, query_type)
 
-        # 4. HANDLE EXTERNAL RESULT
+
         if data and "error" not in data:
-            # New book successfully saved and returned by the service
-            # Use 201 for a newly created resource
             return Response(data, status=status.HTTP_201_CREATED) 
             
         elif data and "error" in data:
@@ -76,7 +72,6 @@ class BookViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE
             )
         else:
-            # No results found (no book found for the given query/isbn)
             return Response(
                 {"detail": "Book not found via Open Library API for the given query."},
                 status=status.HTTP_404_NOT_FOUND,
@@ -96,26 +91,23 @@ class BookViewSet(viewsets.ModelViewSet):
 
 class ReviewViewSet(viewsets.ModelViewSet):
 
-    queryset = Review.objects.all().select_related("book", "user")
     serializer_class = ReviewSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
+    pagination_class = CustomPageNumberPagination
+
+    def get_queryset(self):
+        queryset = Review.objects.all().select_related("book", "user")
+        book_pk = self.kwargs.get("book_pk")
+        if book_pk:
+            queryset = queryset.filter(book__parent_asin=book_pk)
+        return queryset
 
     def perform_create(self, serializer):
         user = self.request.user
         book_pk = serializer.validated_data.get("book").pk
         if Review.objects.filter(book__pk=book_pk, user=user).exists():
             raise ValidationError("You have already reviewed this book.")
-        review = serializer.save(user=user)
-        review.book.recalculate_ratings()
-        
-    def perform_update(self, serializer):
-        review = serializer.save()
-        review.book.recalculate_ratings()
-
-    def perform_destroy(self, instance):
-        book_to_update = instance.book 
-        instance.delete()
-        book_to_update.recalculate_ratings()
+        serializer.save(user=user)
 
     @action(
         detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated]
@@ -158,20 +150,22 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
 
-    queryset = Comment.objects.all().select_related("review", "user")
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = Comment.objects.all().select_related("review", "user")
         review_pk = self.kwargs.get("review_pk")
+        if not review_pk:
+            review_pk = self.request.query_params.get("review")
         if review_pk:
             queryset = queryset.filter(review__pk=review_pk)
-
         return queryset.order_by("-created_at")  # order by date
 
     def perform_create(self, serializer):
         review_pk = self.kwargs.get("review_pk")
+        if not review_pk:
+            review_pk = self.request.data.get("review")
         if review_pk:
             review = Review.objects.get(pk=review_pk)
             serializer.save(user=self.request.user, review=review)

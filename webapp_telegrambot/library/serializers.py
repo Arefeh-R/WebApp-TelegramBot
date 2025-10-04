@@ -27,6 +27,8 @@ class BookSerializer(serializers.ModelSerializer):
         model = Book
         fields = [
             "parent_asin",
+            "average_rating",
+            "rating_number",
             "title",
             "authors",
             "isbn_10",

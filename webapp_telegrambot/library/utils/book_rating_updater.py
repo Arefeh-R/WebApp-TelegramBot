@@ -8,13 +8,16 @@ def update_book_rating(book_pk):
     except Book.DoesNotExist:
         return
     
-    stats = book.review_set.aggregate(
+    stats = book.reviews.aggregate(
         avg_rating=Avg('rating'),
-        count_rating=Count('review_id')
+        count_rating=Count('rating')  # Count non-null ratings
     )
 
-    book.average_rating = stats['avg_rating']
-    book.rating_number = stats['count_rating']
+    avg = stats['avg_rating']
+    count = stats['count_rating']
+
+    book.average_rating = round(avg, 2) if avg is not None else None
+    book.rating_number = count if count is not None else 0
 
     book.save(update_fields=['average_rating', 'rating_number', 'updated_at'])
 
