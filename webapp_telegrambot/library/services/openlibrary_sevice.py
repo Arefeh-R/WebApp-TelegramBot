@@ -1,7 +1,7 @@
 import re
 import requests
 from django.db import transaction
-from ..models import Book, Author, BookAuthor, BookCategorie, Category
+from ..models import Book, Author, BookAuthor, BookCategory, Category
 from ..serializers import BookSerializer
 from datetime import datetime
 OPEN_LIBRARY_BASE_URL = "https://openlibrary.org"
@@ -198,12 +198,12 @@ def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, d
         ]
         BookAuthor.objects.bulk_create(book_authors_to_create, ignore_conflicts=True)
 
-        BookCategorie.objects.filter(book=book_instance).delete()
+        BookCategory.objects.filter(book=book_instance).delete()
         book_categories_to_create = [
-            BookCategorie(book=book_instance, category=category)
+            BookCategory(book=book_instance, category=category)
             for category in category_instances
         ]
-        BookCategorie.objects.bulk_create(book_categories_to_create, ignore_conflicts=True)
+        BookCategory.objects.bulk_create(book_categories_to_create, ignore_conflicts=True)
                  
         return book_instance
 
