@@ -109,7 +109,17 @@ def _clean_and_filter_subjects(raw_subjects: list, limit: int = 5) -> list:
 # --- END: New Subject Filtering Logic ---
 
 
-def _extract_amazon_asin(source_records: list) -> str or None: # type: ignore
+def _get_amazon_asin(book_data: dict) -> str or None: # type: ignore
+    # First, try to extract from identifiers
+    identifiers = book_data.get('identifiers', {})
+    amazon_list = identifiers.get('amazon', []) if isinstance(identifiers, dict) else []
+    amazon_asin = amazon_list[0] if amazon_list else None
+
+    if amazon_asin:
+        return amazon_asin
+
+    # Fallback to source_records
+    source_records = book_data.get('source_records', [])
     if not source_records:
         return None
         
@@ -128,7 +138,7 @@ def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, d
     else:
         raise ValueError("Invalid book data structure provided for mapping.")
     
-    amazon_asin = _extract_amazon_asin(book_data.get('source_records'))
+    amazon_asin = _get_amazon_asin(book_data)
     isbn_13_list = book_data.get('isbn_13')
     isbn_13 = isbn_13_list[0] if isbn_13_list else None
     
