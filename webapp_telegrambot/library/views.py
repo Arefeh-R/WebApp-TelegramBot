@@ -26,7 +26,7 @@ class BookViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPageNumberPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
 
-    search_fields = ["title", "authors__name", "=isbn_13", "isbn_10", "=parent_asin"]
+    search_fields = ["title", "=authors__name", "=isbn_13", "isbn_10", "=parent_asin"]
 
     ordering_fields = ["publication_date", "average_rating"]
 

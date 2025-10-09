@@ -8,27 +8,42 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
+from telegram_bot.views import GroupViewSet, TelegramProfileViewSet, ForumTopicViewSet
 
 router = DefaultRouter()
+
+#library routers
+
 router.register(r'books', BookViewSet, basename='book')
 router.register(r'user-books', UserBookViewSet, basename='userbook')
 router.register(r'authors', AuthorviewSet, basename='author')
 router.register(r'categories', CategoryViewSet, basename='category')
-router.register(r'users', UserViewSet, basename='user')
+
 router.register(r'reviews', ReviewViewSet, basename='review')
 router.register(r'comments', CommentViewSet, basename='comment')
 
-# Nested routers for reviews under books
 books_router = routers.NestedDefaultRouter(router, r'books', lookup='book')
 books_router.register(r'reviews', ReviewViewSet, basename='book-reviews')
 
-# Nested routers for comments under reviews (nested under books)
 reviews_router = routers.NestedDefaultRouter(books_router, r'reviews', lookup='review')
 reviews_router.register(r'comments', CommentViewSet, basename='review-comments')
 
-# Nested routers for comments under reviews (flat reviews route)
 flat_reviews_router = routers.NestedDefaultRouter(router, r'reviews', lookup='review')
 flat_reviews_router.register(r'comments', CommentViewSet, basename='flat-review-comments')
+
+
+#user routes
+router.register(r'users', UserViewSet, basename='user')
+
+
+#telegram bot routes
+router.register(r'groups', GroupViewSet, basename='group')
+router.register(r'telegram-profiles', TelegramProfileViewSet, basename='telegram-profile')
+router.register(r'topics', ForumTopicViewSet, basename='forum-topic')
+
+groups_router = routers.NestedDefaultRouter(router, r'groups', lookup='group')
+groups_router.register(r'topics', ForumTopicViewSet, basename='group-topics')
+
 
 urlpatterns = [
     path("", include(router.urls)),
