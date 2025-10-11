@@ -41,8 +41,8 @@ router.register(r'groups', GroupViewSet, basename='group')
 router.register(r'telegram-profiles', TelegramProfileViewSet, basename='telegram-profile')
 router.register(r'topics', ForumTopicViewSet, basename='forum-topic')
 
-groups_router = routers.NestedDefaultRouter(router, r'groups', lookup='group')
-groups_router.register(r'topics', ForumTopicViewSet, basename='group-topics')
+# groups_router = routers.NestedDefaultRouter(router, r'groups', lookup='group')
+# groups_router.register(r'topics', ForumTopicViewSet, basename='group-topics')
 
 
 urlpatterns = [

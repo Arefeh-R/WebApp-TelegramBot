@@ -1,3 +1,4 @@
+from django.forms import ValidationError
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -129,4 +130,8 @@ class ForumTopicViewSet(viewsets.ModelViewSet):
         return qs
 
     def perform_create(self, serializer):
+        group_id = self.request.query_params.get("group_id")
+        count = ForumTopic.objects.filter(group=group_id).count()
+        if count >= 50:
+            raise ValidationError("Group has reached topic capacity (50).")
         serializer.save()

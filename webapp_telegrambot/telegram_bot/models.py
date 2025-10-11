@@ -75,6 +75,3 @@ class ForumTopic(models.Model):
     def __str__(self):
         return f"{self.name} ({self.group.name})"
     
-    @classmethod
-    def get_active_topic_count(cls, chat_id):
-        return cls.objects.filter(chat_id=chat_id, is_active=True).count()

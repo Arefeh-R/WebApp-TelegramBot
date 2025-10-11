@@ -1,14 +1,17 @@
 from aiogram import Router
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InlineQuery, InlineQueryResultArticle, InputTextMessageContent
 from aiogram.filters import Command
 from aiogram.filters.command import CommandObject
-import aiohttp 
-import os 
+import aiohttp
+import os
+import logging
+import uuid
 from typing import Dict, Any, List
 from config import WEBAPP_BASE_URL, DJANGO_API_BASE_URL
 
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 # --- Helper Function for Local API Call ---
 async def search_books_api(query: str) -> Dict[str, Any]:
@@ -91,7 +94,7 @@ async def command_search_handler(message: Message, command: CommandObject) -> No
         rating = book.get('average_rating', 'بدون امتیاز')
         
         line = (
-            f"{i}\. <b>{title}</b>\n"
+            f"{i} <b>{title}</b>\n"
             f"   نویسنده: <i>{author_display}</i>\n"
             f"   امتیاز: {rating} (بر اساس {book.get('rating_number', 0)} رأی)\n"
         )
@@ -121,3 +124,39 @@ async def command_search_handler(message: Message, command: CommandObject) -> No
         
     # Send the final message with the keyboard
     await message.answer(response_text, parse_mode='HTML', reply_markup=reply_markup)
+
+
+# === INLINE QUERY (SEARCH BOOKS) ===
+@router.inline_query()
+async def inline_book_search(inline_query: InlineQuery):
+    query = inline_query.query.strip()
+    if not query:
+        return
+
+    url = f"{DJANGO_API_BASE_URL}/books/?search={query}"
+    results = []
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as resp:
+            if resp.status == 200:
+                data = await resp.json()
+                for book in data.get("results", []):
+                    title = book.get("title", "بدون عنوان")
+                    subtitle = book.get("subtitle", "")
+                    thumb = book.get("cover", "")
+                    book_id = book.get("parent_asin", "")
+
+                    text = f"/review {book_id}"
+                    results.append(
+                        InlineQueryResultArticle(
+                            id=str(uuid.uuid4()),
+                            title=title,
+                            description=subtitle,
+                            input_message_content=InputTextMessageContent(message_text=text),
+                            thumb_url=thumb
+                        )
+                    )
+            else:
+                logger.error(f"Inline search failed: {resp.status}")
+
+    await inline_query.answer(results, cache_time=1)

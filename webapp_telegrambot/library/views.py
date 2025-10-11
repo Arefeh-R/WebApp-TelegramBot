@@ -100,7 +100,10 @@ class ReviewViewSet(viewsets.ModelViewSet):
         book_pk = self.kwargs.get("book_pk")
         if book_pk:
             queryset = queryset.filter(book__parent_asin=book_pk)
-        return queryset
+        mine = self.request.query_params.get("mine")
+        if mine and self.request.user.is_authenticated:
+            queryset = queryset.filter(user=self.request.user)
+        return queryset.order_by('-created_at')
 
     def perform_create(self, serializer):
         user = self.request.user

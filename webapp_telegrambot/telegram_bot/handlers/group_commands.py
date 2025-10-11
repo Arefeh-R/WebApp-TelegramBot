@@ -38,27 +38,50 @@ async def show_groups(message: Message):
         await message.answer("❌ هیچ گروهی برای نمایش وجود ندارد.")
         return
 
-    inline_buttons = []
-    text_lines = ["📚 <b>لیست گروه‌های فعال:</b>\n"]
+    if len(groups) > 10:
+        await message.answer("⚠️ بیش از ۱۰ گروه موجود است. برای مشاهده کامل لیست، لطفاً از وب‌اپ استفاده کنید.")
 
+    # Send each group separately
     for g in groups:
         group_id = g.get("id")
         name = g.get("name", "بدون نام")
         desc = g.get("description", "")
         members = g.get("member_count", 0)
 
-        text_lines.append(f"• <b>{name}</b> ({members} عضو)\n{desc}\n")
+        text = (
+            f"📚 <b>{name}</b>\n"
+            f"👥 اعضا: {members}\n"
+            f"📝 توضیحات: {desc or '—'}"
+        )
 
         if group_id:
-            inline_buttons.append([
-                InlineKeyboardButton(text=f"📎 مشاهده لینک {name}", callback_data=f"show_link_{group_id}")
-            ])
+            markup = InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [InlineKeyboardButton(
+                        text="📎 مشاهده لینک گروه",
+                        callback_data=f"show_link_{group_id}"
+                    )],
+                    [InlineKeyboardButton(
+                            text="💬 مشاهده زیرگروه ها",
+                            callback_data=f"show_topics_{group_id}"
+                        )]
+                ]
+            )
+            await message.answer(text, parse_mode="HTML", reply_markup=markup)
+        else:
+            await message.answer(text, parse_mode="HTML")
 
-  # ✅ Add "Request new group" button at the end
-    inline_buttons.append([InlineKeyboardButton(text="➕ درخواست گروه جدید", callback_data="request_new_group")])
+    # After listing all groups → show the “request new group” option
+    request_button = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(
+                text="➕ درخواست گروه جدید",
+                callback_data="request_new_group"
+            )]
+        ]
+    )
+    await message.answer("👇 اگر گروه مورد نظر خود را پیدا نکردید:", reply_markup=request_button)
 
-    markup = InlineKeyboardMarkup(inline_keyboard=inline_buttons)
-    await message.answer("\n".join(text_lines), parse_mode="HTML", reply_markup=markup)
 
 
 # --- 3️⃣ Callback: show link ---
@@ -104,6 +127,6 @@ async def show_group_link(callback: CallbackQuery):
 
 @router.callback_query(F.data == "request_new_group")
 async def handle_request_group_button(callback: CallbackQuery, state: FSMContext):
-    await callback.answer()  # Close the spinner
+    await callback.answer()  
     await callback.message.answer("📝 درخواست گروه جدید را شروع می‌کنیم...")
     await start_request_group(callback.message, state)
