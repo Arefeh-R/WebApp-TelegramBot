@@ -1,5 +1,5 @@
-from aiogram import Router
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InlineQuery, InlineQueryResultArticle, InputTextMessageContent
+from aiogram import Router, F
+from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InlineQuery, InlineQueryResultArticle, InputTextMessageContent, CallbackQuery
 from aiogram.filters import Command
 from aiogram.filters.command import CommandObject
 import aiohttp
@@ -7,11 +7,37 @@ import os
 import logging
 import uuid
 from typing import Dict, Any, List
-from config import WEBAPP_BASE_URL, DJANGO_API_BASE_URL
-
+from ..config import WEBAPP_BASE_URL, DJANGO_API_BASE_URL
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.context import FSMContext
 
 router = Router()
 logger = logging.getLogger(__name__)
+
+# handlers/search_commands.py (add these)
+
+@router.callback_query(F.data == "menu_search")
+async def show_search_menu(callback: CallbackQuery):
+    """Show search options"""
+    from ..keyboards.main_menu import get_search_menu
+    await callback.message.edit_text(
+        "🔍 جستجوی کتاب:\nلطفاً نوع جستجو را انتخاب کنید:",
+        reply_markup=get_search_menu()
+    )
+    await callback.answer()
+
+@router.callback_query(F.data == "search_title")
+async def search_title_prompt(callback: CallbackQuery, state: FSMContext):
+    """Prompt for title search"""
+    await callback.message.answer("📖 لطفاً عنوان کتاب را وارد کنید:")
+    await state.set_state(SearchStates.waiting_for_title)
+    await callback.answer()
+
+# Add FSM States
+class SearchStates(StatesGroup):
+    waiting_for_title = State()
+    waiting_for_author = State()
+    waiting_for_isbn = State()
 
 # --- Helper Function for Local API Call ---
 async def search_books_api(query: str) -> Dict[str, Any]:
@@ -140,7 +166,7 @@ async def inline_book_search(inline_query: InlineQuery):
         async with session.get(url) as resp:
             if resp.status == 200:
                 data = await resp.json()
-                for book in data.get("results", []):
+                for book in data.get("results", [])[:50]:
                     title = book.get("title", "بدون عنوان")
                     subtitle = book.get("subtitle", "")
                     thumb = book.get("cover", "")
@@ -160,3 +186,5 @@ async def inline_book_search(inline_query: InlineQuery):
                 logger.error(f"Inline search failed: {resp.status}")
 
     await inline_query.answer(results, cache_time=1)
+
+

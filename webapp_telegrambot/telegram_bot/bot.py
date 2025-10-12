@@ -2,7 +2,7 @@ import logging
 from aiogram import Bot
 from aiogram import Dispatcher
 from aiogram.client.default import DefaultBotProperties
-from handlers import *
+from .handlers import *
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ def setup_dispatcher(dp: Dispatcher) -> None:
     
     # --- 2. Register Routers ---
     # The order of registration matters for command handling
-    dp.include_router(start_router)
+    dp.include_router(menu_router)
     dp.include_router(search_router)
     dp.include_router(help_router)
     dp.include_router(callbacks_router)
@@ -24,7 +24,7 @@ def setup_dispatcher(dp: Dispatcher) -> None:
     dp.include_router(login_router)
     dp.include_router(group_router)
     dp.include_router(request_group_router)
-    dp.include_router(admin_tools_router)
+    dp.include_router(admin_router)
     dp.include_router(review_router) 
     dp.include_router(topic_router)
 

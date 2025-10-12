@@ -2,7 +2,7 @@ import os
 import sys
 
 # Add the project root to Python path
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+#sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'webapp_telegrambot.settings')
 
@@ -13,8 +13,8 @@ import asyncio
 import logging
 from aiogram import Dispatcher
 from aiogram.types import BotCommand
-from config import BOT_TOKEN
-from bot import create_bot, setup_dispatcher
+from .config import BOT_TOKEN
+from .bot import create_bot, setup_dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
 
 logging.basicConfig(
@@ -23,7 +23,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-async def start_polling():
+async def main():
     """
     Initializes the bot and starts the polling loop.
     """
@@ -49,7 +49,7 @@ async def start_polling():
 if __name__ == '__main__':
     # This block runs when you execute 'python telegram_bot/main.py'
     try:
-        asyncio.run(start_polling())
+        asyncio.run(main())
     except KeyboardInterrupt:
         logger.info("Bot stopped by user via KeyboardInterrupt.")
     except Exception as e:

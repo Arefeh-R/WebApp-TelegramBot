@@ -6,4 +6,5 @@ class Command(BaseCommand):
     help = 'Run the Telegram bot'
 
     def handle(self, *args, **options):
+        self.stdout.write(self.style.SUCCESS('Starting Telegram bot...'))
         asyncio.run(main())

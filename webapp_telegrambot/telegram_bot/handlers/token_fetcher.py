@@ -2,7 +2,7 @@ import aiohttp
 import logging
 from typing import Optional
 from datetime import datetime, timedelta
-from config import BOT_USERNAME, BOT_PASSWORD, DJANGO_API_BASE_URL
+from ..config import BOT_USERNAME, BOT_PASSWORD, DJANGO_API_BASE_URL
 
 
 logger = logging.getLogger(__name__)

@@ -3,16 +3,34 @@ import logging
 from aiogram import Router, F, types
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message
 from aiogram.filters import Command
-from config import DJANGO_API_BASE_URL
-from .login_commands import get_token_by_telegram
+from ..config import DJANGO_API_BASE_URL
+from .login import get_token_by_telegram
 from aiogram.fsm.context import FSMContext
 from .request_group import start_request_group
+from ..keyboards.main_menu import get_groups_menu
+
 
 router = Router()
 logger = logging.getLogger(__name__)
 
 GROUPS_URL = f"{DJANGO_API_BASE_URL}/groups/"
 TOKEN_BY_TELEGRAM_URL = f"{DJANGO_API_BASE_URL}/telegram-profiles/token_by_telegram/"
+
+
+@router.callback_query(F.data == "menu_groups")
+async def show_groups_menu(callback: CallbackQuery):
+    """Show groups menu"""
+    await callback.message.edit_text(
+        "👥 گروه‌های کتابخوانی:\nلطفاً یک گزینه را انتخاب کنید:",
+        reply_markup=get_groups_menu()
+    )
+    await callback.answer()
+
+@router.callback_query(F.data == "groups_list")
+async def show_groups_callback(callback: CallbackQuery):
+    """Show groups list from menu"""
+    await show_groups(callback.message)
+    await callback.answer()
 
 
 # --- 1️⃣ Fetch list of groups from DRF ---

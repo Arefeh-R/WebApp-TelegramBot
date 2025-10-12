@@ -1,11 +1,12 @@
-from aiogram import Router, types
+from aiogram import Router, types, F
 from aiogram.filters import Command
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 import aiohttp
 import logging
-from config import  DJANGO_API_BASE_URL
+from ..config import  DJANGO_API_BASE_URL
 from .token_fetcher import get_valid_access_token
+from aiogram.types import CallbackQuery
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -19,6 +20,31 @@ class LoginStates(StatesGroup):
     username = State()
     password = State()
 
+# handlers/login_commands.py (add)
+
+@router.callback_query(F.data == "menu_account")
+async def show_account_menu(callback: CallbackQuery):
+    """Show account menu"""
+    from ..keyboards.main_menu import get_account_menu
+    telegram_id = callback.from_user.id
+    
+    async with aiohttp.ClientSession() as session:
+        token = await get_token_by_telegram(session, telegram_id)
+        
+    if token:
+        text = "✅ شما وارد سیستم شده‌اید.\nگزینه مورد نظر را انتخاب کنید:"
+    else:
+        text = "⚠️ شما وارد سیستم نشده‌اید.\nلطفاً ابتدا وارد شوید:"
+    
+    await callback.message.edit_text(text, reply_markup=get_account_menu())
+    await callback.answer()
+
+@router.callback_query(F.data == "account_login")
+async def login_from_menu(callback: CallbackQuery, state: FSMContext):
+    """Start login flow from menu"""
+    await callback.message.answer("👤 لطفاً نام کاربری خود را وارد کنید:")
+    await state.set_state(LoginStates.username)
+    await callback.answer()
 
 @router.message(Command("login"))
 async def login_command(message: types.Message, state: FSMContext):

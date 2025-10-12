@@ -2,8 +2,8 @@ from aiogram import Router, types
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 import aiohttp
-from config import DJANGO_API_BASE_URL
-from .login_commands import get_token_by_telegram
+from ..config import DJANGO_API_BASE_URL
+from .login import get_token_by_telegram
 
 router = Router()
 
