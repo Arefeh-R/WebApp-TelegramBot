@@ -1,6 +1,8 @@
+# handlers/review.py
+
 import aiohttp
 import logging
-from aiogram import Router
+from aiogram import Router, Bot
 from aiogram.filters import Command
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.fsm.context import FSMContext
@@ -48,6 +50,61 @@ async def get_existing_review(session, token, book_id):
     return None
 
 
+# === HELPER FUNCTION FOR REUSABLE REVIEW LOGIC ===
+async def handle_review_request(bot: Bot, chat_id: int, message_id: int, book_id: str, telegram_id: int, state: FSMContext):
+    """
+    Core review logic that can be called from /review command or callbacks
+    
+    Args:
+        bot: Bot instance
+        chat_id: Chat ID where to send messages
+        message_id: Message ID (for editing inline results, optional)
+        book_id: Book ISBN/ID
+        telegram_id: User's Telegram ID
+        state: FSM Context
+    """
+    async with aiohttp.ClientSession() as session:
+        token = await get_token_by_telegram(session, telegram_id)
+        if not token:
+            await bot.send_message(chat_id, "⚠️ ابتدا باید با دستور /login وارد شوید.")
+            return
+
+        # Fetch book
+        book = await fetch_book_details(session, token, book_id)
+        if not book:
+            await bot.send_message(chat_id, "❌ کتابی با این شناسه یافت نشد.")
+            return
+
+        existing_review = await get_existing_review(session, token, book_id)
+        logger.info(f"Existing review: {existing_review}")
+
+        if existing_review:
+            # Ask for confirmation to edit
+            await state.update_data(
+                book_id=book_id, 
+                existing_review=existing_review, 
+                token=token, 
+                review_id=existing_review['review_id']
+            )
+            markup = InlineKeyboardMarkup(inline_keyboard=[
+                [
+                    InlineKeyboardButton(text="بله، ویرایش کن ✏️", callback_data="edit_review"),
+                    InlineKeyboardButton(text="خیر 🚫", callback_data="cancel_review")
+                ]
+            ])
+            await bot.send_message(
+                chat_id,
+                "📘 شما قبلاً برای این کتاب نقد نوشته‌اید.\nآیا مایل به ویرایش آن هستید؟",
+                reply_markup=markup
+            )
+            await state.set_state(ReviewStates.waiting_for_edit_confirmation)
+        else:
+            # New review
+            await state.update_data(book_id=book_id, token=token)
+            await bot.send_message(chat_id, "📝 لطفاً نقد خود را ارسال کنید:")
+            await state.set_state(ReviewStates.waiting_for_review_text)
+
+
 # === MAIN COMMAND HANDLER ===
 @router.message(Command("review"))
 async def start_review_command(message: Message, state: FSMContext):
@@ -58,41 +115,17 @@ async def start_review_command(message: Message, state: FSMContext):
 
     book_id = parts[1]
     telegram_id = message.from_user.id
+    
+    # Call the helper function
+    await handle_review_request(
+        bot=message.bot,
+        chat_id=message.chat.id,
+        message_id=message.message_id,
+        book_id=book_id,
+        telegram_id=telegram_id,
+        state=state
+    )
 
-    async with aiohttp.ClientSession() as session:
-        token = await get_token_by_telegram(session, telegram_id)
-        if not token:
-            await message.answer("⚠️ ابتدا باید با دستور /login وارد شوید.")
-            return
-
-        # Fetch book
-        book = await fetch_book_details(session, token, book_id)
-        if not book:
-            await message.answer("❌ کتابی با این شناسه یافت نشد.")
-            return
-
-        existing_review = await get_existing_review(session, token, book_id)
-        logger.info(f"Existing review: {existing_review}")
-
-        if existing_review:
-            # Ask for confirmation to edit
-            await state.update_data(book_id=book_id, existing_review=existing_review, token=token, review_id=existing_review['review_id'])
-            markup = InlineKeyboardMarkup(inline_keyboard=[
-                [
-                    InlineKeyboardButton(text="بله، ویرایش کن ✏️", callback_data="edit_review"),
-                    InlineKeyboardButton(text="خیر 🚫", callback_data="cancel_review")
-                ]
-            ])
-            await message.answer(
-                "📘 شما قبلاً برای این کتاب نقد نوشته‌اید.\nآیا مایل به ویرایش آن هستید؟",
-                reply_markup=markup
-            )
-            await state.set_state(ReviewStates.waiting_for_edit_confirmation)
-        else:
-            # New review
-            await state.update_data(book_id=book_id, token=token)
-            await message.answer("📝 لطفاً نقد خود را ارسال کنید:")
-            await state.set_state(ReviewStates.waiting_for_review_text)
 
 @router.callback_query(lambda c: c.data in ["cancel_review", "edit_review"])
 async def handle_edit_decision(callback: CallbackQuery, state: FSMContext):
@@ -155,4 +188,3 @@ async def receive_review_text(message: Message, state: FSMContext):
                 await message.answer(f"❌ خطا در ثبت/ویرایش نقد: {error_text}")
 
     await state.clear()
-

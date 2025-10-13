@@ -130,7 +130,7 @@ def _get_amazon_asin(book_data: dict) -> str or None: # type: ignore
     return None
 
 
-def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, description: str) -> Book:
+def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, description: str, rating_number: int, average_rating: float) -> Book:
     """Maps Open Library Edition data to local models and saves them."""
     
     if ol_data.get('key', '').startswith('/books/'):
@@ -139,13 +139,17 @@ def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, d
         raise ValueError("Invalid book data structure provided for mapping.")
     
     amazon_asin = _get_amazon_asin(book_data)
-    isbn_13_list = book_data.get('isbn_13')
-    isbn_13 = isbn_13_list[0] if isbn_13_list else None
+    isbn_10_list = book_data.get('isbn_13')
+    isbn_13 = isbn_10_list[0] if isbn_10_list else None
+    isbn_10_list = book_data.get('isbn_10')
+    isbn_10 = isbn_10_list[0] if isbn_10_list else None
     
     if amazon_asin:
         parent_asin_key = amazon_asin
     elif isbn_13:
         parent_asin_key = isbn_13
+    elif isbn_10:
+        parent_asin_key = isbn_10
     else:
         book_key = book_data.get('key').split('/')[-1] if book_data.get('key') else None
         if not book_key:
@@ -194,8 +198,8 @@ def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, d
                 'publication_date': publication_date,
                 'isbn_13': isbn_13,
                 'isbn_10': book_data.get('isbn_10', [None])[0] if book_data.get('isbn_10') else isbn_13,
-                'average_rating': None,
-                'rating_number': 0,
+                'average_rating': average_rating,
+                'rating_number': rating_number,
                 'main_category': 'Books'
             }
         )
@@ -257,7 +261,7 @@ def search_book_in_openlibrary(query: str, query_type: str) -> dict | None:
             
             params = {
                 query_type: query,
-                'fields': 'key,title,author_name,editions,subject,source_records'
+                'fields': 'key,title,author_name,editions,subject,source_records,ratings_average,ratings_count'
             }
             search_url = f"{OPEN_LIBRARY_BASE_URL}/search.json"
             
@@ -289,13 +293,16 @@ def search_book_in_openlibrary(query: str, query_type: str) -> dict | None:
             
             description = get_description_data(first_doc.get('key')) # first_doc key is the Work Key
             
+            average_rating = first_doc.get('ratings_average',0.0)
+            rating_number = first_doc.get('ratings_count', 0)
+            
             if not ol_data:
                 return None 
         
         else:
             return {"error": f"Invalid query_type: {query_type}"}
 
-        new_book = _map_and_save_book(ol_data, author_names, subject_names, description)
+        new_book = _map_and_save_book(ol_data, author_names, subject_names, description, rating_number, average_rating)
         
         return BookSerializer(new_book).data
 

@@ -1,7 +1,7 @@
-from rest_framework import viewsets, generics, filters, permissions
+from rest_framework import viewsets, filters, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django.db.models import Avg, F, Count
+from django.db.models import F
 from .models import Author, Book, Review, Comment, UserBook, ReviewLike, Category
 from .permissions import IsOwnerOrReadOnly
 from .serializers import (
@@ -17,22 +17,41 @@ from .services.openlibrary_sevice import search_book_in_openlibrary
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
-
+from django.db.models import Q
 
 class BookViewSet(viewsets.ModelViewSet):
-
     queryset = Book.objects.all().prefetch_related("authors")
     serializer_class = BookSerializer
     pagination_class = CustomPageNumberPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
 
-    search_fields = ["title", "=authors__name", "=isbn_13", "isbn_10", "=parent_asin"]
+    search_fields = [
+        "title",              # Partial match on title
+        "^authors__name",     # Starts with for author (better for names)
+        "=isbn_13",          # Exact match for ISBN-13
+        "=isbn_10",          # Exact match for ISBN-10
+        "=parent_asin"       # Exact match for ASIN
+    ]
 
     ordering_fields = ["publication_date", "average_rating"]
+    
+    def get_queryset(self):
+        """Override to handle ISBN queries better"""
+        queryset = super().get_queryset()
+        search_param = self.request.query_params.get('search', None)
+        
+        if search_param and search_param.replace('-', '').replace(' ', '').isdigit():
+            clean_isbn = search_param.replace('-', '').replace(' ', '')
+            queryset = queryset.filter(
+                Q(isbn_13__icontains=clean_isbn) | 
+                Q(isbn_10__icontains=clean_isbn) |
+                Q(parent_asin__icontains=clean_isbn)
+            ).distinct()
+        
+        return queryset
 
     @action(detail=False, methods=["get"], url_path="top-rated")
     def top_rated(self, request):
-
         books = Book.objects.exclude(average_rating__isnull=True).order_by(
             "-average_rating"
         )[:10]
@@ -41,7 +60,6 @@ class BookViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["get"], url_path="search-external")
     def search_external(self, request):
-
         query = request.query_params.get("query")
         query_type = request.query_params.get("query_type")
         
@@ -58,15 +76,11 @@ class BookViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-
         data = search_book_in_openlibrary(query, query_type)
-
 
         if data and "error" not in data:
             return Response(data, status=status.HTTP_201_CREATED) 
-            
         elif data and "error" in data:
-            # External API failed (e.g., timeout, 500 error from OL)
             return Response(
                 {"detail": data["error"]}, 
                 status=status.HTTP_503_SERVICE_UNAVAILABLE

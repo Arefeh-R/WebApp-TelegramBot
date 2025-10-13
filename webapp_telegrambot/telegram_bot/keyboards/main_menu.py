@@ -21,13 +21,30 @@ def get_admin_menu():
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
+# keyboards/main_menu.py
+
 def get_search_menu():
-    """Search submenu"""
+    """Search submenu with inline and external options"""
     keyboard = [
-        [InlineKeyboardButton(text="📖 جستجو بر اساس عنوان", callback_data="search_title")],
-        [InlineKeyboardButton(text="✒️ جستجو بر اساس نویسنده", callback_data="search_author")],
-        [InlineKeyboardButton(text="🔢 جستجو با ISBN", callback_data="search_isbn")],
+        [InlineKeyboardButton(
+            text="🔎 جستجوی سریع (Inline)", 
+            switch_inline_query_current_chat=""
+        )],
+        [InlineKeyboardButton(
+            text="🌐 جستجوی گسترده", 
+            callback_data="search_external"
+        )],
         [InlineKeyboardButton(text="🔙 بازگشت", callback_data="main_menu")],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+def get_external_search_menu():
+    """External search type selection"""
+    keyboard = [
+        [InlineKeyboardButton(text="📖 جستجو با عنوان", callback_data="ext_search_title")],
+        [InlineKeyboardButton(text="✒️ جستجو با نویسنده", callback_data="ext_search_author")],
+        [InlineKeyboardButton(text="🔢 جستجو با ISBN", callback_data="ext_search_isbn")],
+        [InlineKeyboardButton(text="🔙 بازگشت", callback_data="menu_search")],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 

@@ -1,190 +1,308 @@
 from aiogram import Router, F
-from aiogram.types import Message, InlineKeyboardButton, InlineKeyboardMarkup, InlineQuery, InlineQueryResultArticle, InputTextMessageContent, CallbackQuery
-from aiogram.filters import Command
-from aiogram.filters.command import CommandObject
+from aiogram.types import (
+    Message, 
+    InlineKeyboardButton, 
+    InlineKeyboardMarkup, 
+    InlineQuery, 
+    InlineQueryResultArticle, 
+    InputTextMessageContent, 
+    CallbackQuery
+)
+from aiogram.fsm.state import StatesGroup, State
+from aiogram.fsm.context import FSMContext
 import aiohttp
-import os
 import logging
 import uuid
 from typing import Dict, Any, List
 from ..config import WEBAPP_BASE_URL, DJANGO_API_BASE_URL
-from aiogram.fsm.state import StatesGroup, State
-from aiogram.fsm.context import FSMContext
 
 router = Router()
 logger = logging.getLogger(__name__)
 
-# handlers/search_commands.py (add these)
+# === FSM STATES ===
+class ExternalSearchStates(StatesGroup):
+    waiting_for_query = State()
+
+# === MENU HANDLERS ===
 
 @router.callback_query(F.data == "menu_search")
 async def show_search_menu(callback: CallbackQuery):
-    """Show search options"""
+    """Show search options menu"""
     from ..keyboards.main_menu import get_search_menu
+    
+    help_text = (
+        "🔍 <b>جستجوی کتاب</b>\n\n"
+        "<b>🔎 جستجوی سریع (Inline):</b>\n"
+        "• برای جستجوی سریع در دیتابیس محلی\n"
+        "• جستجو بر اساس عنوان، نویسنده یا ISBN\n"
+        "• کافی است روی دکمه کلیک کنید و عبارت مورد نظر را تایپ کنید\n\n"
+        "<b>🌐 جستجوی گسترده:</b>\n"
+        "• جستجو در کتابخانه Open Library\n"
+        "• برای کتاب‌هایی که در دیتابیس محلی نیستند\n"
+        "• امکان افزودن کتاب جدید به سیستم\n\n"
+        "💡 <i>توصیه: ابتدا از جستجوی سریع استفاده کنید</i>"
+    )
+    
     await callback.message.edit_text(
-        "🔍 جستجوی کتاب:\nلطفاً نوع جستجو را انتخاب کنید:",
+        help_text,
+        parse_mode='HTML',
         reply_markup=get_search_menu()
     )
     await callback.answer()
 
-@router.callback_query(F.data == "search_title")
-async def search_title_prompt(callback: CallbackQuery, state: FSMContext):
-    """Prompt for title search"""
-    await callback.message.answer("📖 لطفاً عنوان کتاب را وارد کنید:")
-    await state.set_state(SearchStates.waiting_for_title)
+
+@router.callback_query(F.data == "search_external")
+async def show_external_search_menu(callback: CallbackQuery):
+    """Show external search type selection"""
+    from ..keyboards.main_menu import get_external_search_menu
+    
+    await callback.message.edit_text(
+        "🌐 <b>جستجوی گسترده</b>\n\n"
+        "لطفاً نوع جستجو را انتخاب کنید:",
+        parse_mode='HTML',
+        reply_markup=get_external_search_menu()
+    )
     await callback.answer()
 
-# Add FSM States
-class SearchStates(StatesGroup):
-    waiting_for_title = State()
-    waiting_for_author = State()
-    waiting_for_isbn = State()
 
-# --- Helper Function for Local API Call ---
-async def search_books_api(query: str) -> Dict[str, Any]:
-    """
-    Sends an asynchronous request to the local Django REST Framework books list endpoint.
-    Uses 'search' parameter for full-text search and orders by average_rating.
-    """
-    # Target the main books list endpoint (assuming /api/books)
-    url = f"{DJANGO_API_BASE_URL}/books" 
+@router.callback_query(F.data.startswith("ext_search_"))
+async def external_search_prompt(callback: CallbackQuery, state: FSMContext):
+    """Prompt user for external search query"""
+    search_type = callback.data.split("_")[-1]  # title, author, or isbn
     
-    # Use 'search' parameter and add default ordering
+    # Store search type in FSM
+    await state.update_data(search_type=search_type)
+    await state.set_state(ExternalSearchStates.waiting_for_query)
+    
+    prompts = {
+        "title": "📖 لطفاً عنوان کتاب را وارد کنید:",
+        "author": "✒️ لطفاً نام نویسنده را وارد کنید:",
+        "isbn": "🔢 لطفاً ISBN کتاب را وارد کنید:"
+    }
+    
+    await callback.message.answer(prompts.get(search_type, "لطفاً عبارت جستجو را وارد کنید:"))
+    await callback.answer()
+
+
+# === EXTERNAL SEARCH HANDLER ===
+
+@router.message(ExternalSearchStates.waiting_for_query)
+async def handle_external_search(message: Message, state: FSMContext):
+    """Handle external search via Open Library API"""
+    data = await state.get_data()
+    search_type = data.get("search_type")
+    query = message.text.strip()
+    
+    if not query:
+        await message.answer("❌ لطفاً یک عبارت معتبر وارد کنید.")
+        return
+    
+    await message.answer(f"🔍 در حال جستجو در Open Library برای: <b>{query}</b>...", parse_mode='HTML')
+    
+    # Call Django API endpoint for external search
+    url = f"{DJANGO_API_BASE_URL}/books/search-external/"
+    params = {
+        "query": query,
+        "query_type": search_type
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        try:
+            async with session.get(url, params=params, timeout=15) as response:
+                if response.status == 201:
+                    # Book found and added to database
+                    book_data = await response.json()
+                    await display_external_search_result(message, book_data)
+                    
+                elif response.status == 404:
+                    await message.answer(
+                        "❌ متأسفانه کتابی با این مشخصات در Open Library یافت نشد.\n\n"
+                        "💡 پیشنهاد:\n"
+                        "• املای عبارت جستجو را بررسی کنید\n"
+                        "• از جستجوی سریع (Inline) استفاده کنید\n"
+                        "• با نوع جستجوی دیگری تلاش کنید"
+                    )
+                    
+                elif response.status == 503:
+                    error_data = await response.json()
+                    await message.answer(
+                        f"⚠️ خطا در ارتباط با سرویس خارجی:\n{error_data.get('detail', 'خطای ناشناخته')}\n\n"
+                        "لطفاً چند لحظه دیگر دوباره تلاش کنید."
+                    )
+                    
+                else:
+                    await message.answer(f"❌ خطای سرور: {response.status}")
+                    
+        except aiohttp.ClientConnectorError:
+            await message.answer("❌ خطا در اتصال به سرور. لطفاً بعداً تلاش کنید.")
+        except Exception as e:
+            logger.error(f"External search error: {e}")
+            await message.answer("❌ خطای غیرمنتظره در جستجو.")
+    
+    await state.clear()
+
+
+async def display_external_search_result(message: Message, book_data: Dict[str, Any]):
+    """Display external search result with book details"""
+    title = book_data.get('title', 'عنوان نامشخص')
+    authors = book_data.get('authors', [])
+    author_names = ', '.join([a.get('name', 'نامشخص') for a in authors]) if authors else 'نامشخص'
+    
+    isbn = book_data.get('isbn_13') or book_data.get('isbn_10', 'ندارد')
+    book_id = book_data.get('parent_asin')
+    cover = book_data.get('cover', '')
+    
+    text = (
+        f"✅ <b>کتاب یافت شد و به دیتابیس اضافه شد!</b>\n\n"
+        f"📖 <b>عنوان:</b> {title}\n"
+        f"✒️ <b>نویسنده:</b> {author_names}\n"
+        f"🔢 <b>ISBN:</b> {isbn}\n\n"
+        f"💡 اکنون می‌توانید برای این کتاب نقد بنویسید یا آن را در گروه‌ها به اشتراک بگذارید."
+    )
+    
+    # Create inline buttons
+    buttons = []
+    if book_id:
+        webapp_url = f"{WEBAPP_BASE_URL}/api1/books/{book_id}"
+        buttons.append([InlineKeyboardButton(text="🔗 مشاهده در وب‌اپ", url=webapp_url)])
+        buttons.append([InlineKeyboardButton(text="✍️ نوشتن نقد", callback_data=f"review_{book_id}")])
+    
+    buttons.append([InlineKeyboardButton(text="🔙 بازگشت به جستجو", callback_data="menu_search")])
+    
+    markup = InlineKeyboardMarkup(inline_keyboard=buttons)
+    
+    if cover:
+        try:
+            await message.answer_photo(photo=cover, caption=text, parse_mode='HTML', reply_markup=markup)
+        except:
+            await message.answer(text, parse_mode='HTML', reply_markup=markup)
+    else:
+        await message.answer(text, parse_mode='HTML', reply_markup=markup)
+
+
+# === INLINE QUERY (QUICK SEARCH) ===
+
+@router.inline_query()
+async def inline_book_search(inline_query: InlineQuery):
+    """Handle inline search queries for quick book lookup"""
+    query = inline_query.query.strip()
+    
+    # Show help if query is empty
+    if not query:
+        results = [
+            InlineQueryResultArticle(
+                id=str(uuid.uuid4()),
+                title="💡 راهنمای جستجوی سریع",
+                description="عنوان، نویسنده یا ISBN کتاب را تایپ کنید",
+                input_message_content=InputTextMessageContent(
+                    message_text="برای جستجوی سریع، نام کتاب، نویسنده یا ISBN را تایپ کنید."
+                )
+            )
+        ]
+        await inline_query.answer(results, cache_time=300, is_personal=True)
+        return
+    
+    # Search in local database
+    url = f"{DJANGO_API_BASE_URL}/books/"
     params = {
         'search': query,
         'ordering': '-average_rating'
     }
     
+    results = []
+    
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.get(url, params=params, timeout=10) as response:
-                if response.status == 200:
-                    return await response.json()
-                
-                # Handle non-200 responses
-                return {"error": f"API Error: Status {response.status}", "details": await response.text()}
-        except aiohttp.ClientConnectorError:
-            return {"error": "Connection Error", "details": "Could not connect to the Django API. Ensure your Django server is running."}
-        except Exception as e:
-            return {"error": "Request Failed", "details": str(e)}
-
-
-# --- Search Handler ---
-@router.message(Command("search_title", "search_author"))
-async def command_search_handler(message: Message, command: CommandObject) -> None:
-    """
-    Handles search commands, calls the local search API, and presents results 
-    with inline buttons linking to the web app.
-    """
-    
-    if not command.args:
-        await message.reply("لطفاً بعد از دستور، عنوان یا نام نویسنده مورد نظر خود را وارد کنید.")
-        return
-
-    full_query = command.args.strip()
-    
-    await message.answer(f"⏳ در حال جستجوی کتاب‌های محلی برای: <b>{full_query}</b>...", parse_mode='HTML')
-
-    results = await search_books_api(full_query)
-
-    # 3. Process and Display Results
-    if "error" in results:
-        await message.reply(f"❌ خطای API: {results['error']}")
-        return
-    
-    books: List[Dict[str, Any]] = results.get('results', [])
-    total_count = results.get('count', 0) 
-    
-    if not books:
-        response_text = f"متأسفانه هیچ کتابی برای '<b>{full_query}</b>' در دیتابیس محلی پیدا نشد."
-        # Send message without any keyboard
-        await message.answer(response_text, parse_mode='HTML')
-        return
-
-    # --- Generate Content and Inline Keyboard ---
-    books_display = books[:5]
-    inline_buttons = [] # List of lists of InlineKeyboardButton
-
-    response_lines = [
-        f"✅ <b>نتایج جستجوی محلی برای '{full_query}'</b> ({total_count} نتیجه پیدا شد):\n"
-    ]
-    
-    for i, book in enumerate(books_display, 1):
-        title = book.get('title', 'عنوان نامشخص')
-        book_id = book.get('parent_asin') 
-        
-        authors = book.get('authors', [])
-        if authors and isinstance(authors, list) and len(authors) > 0:
-            author_display = authors[0].get('name', 'نامشخص')
-        else:
-            author_display = 'نامشخص'
-        rating = book.get('average_rating', 'بدون امتیاز')
-        
-        line = (
-            f"{i} <b>{title}</b>\n"
-            f"   نویسنده: <i>{author_display}</i>\n"
-            f"   امتیاز: {rating} (بر اساس {book.get('rating_number', 0)} رأی)\n"
-        )
-        response_lines.append(line)
-        
-        # 💡 Logic to create the Inline Button with the direct link
-        if book_id:
-            # Assuming the web app detail page URL is like: /books/{id}
-            webapp_url = f"{WEBAPP_BASE_URL}/api1/books/{book_id}" 
-            
-            # Create button to link directly to the web app
-            button = InlineKeyboardButton(
-                text=f"🔗 مشاهده جزئیات '{title[:20]}'...", 
-                url=webapp_url
-            )
-            inline_buttons.append([button]) # Add button in its own row
-
-    
-    response_lines.append(
-        "\n💡 این نتایج بر اساس <b>میانگین امتیاز</b> مرتب شده‌اند. برای مشاهده جزئیات، نقدها و امتیازدهی، لطفاً از دکمه‌های زیر استفاده کنید."
-    )
-    
-    response_text = "\n".join(response_lines)
-    
-    # Create the final keyboard markup
-    reply_markup = InlineKeyboardMarkup(inline_keyboard=inline_buttons)
-        
-    # Send the final message with the keyboard
-    await message.answer(response_text, parse_mode='HTML', reply_markup=reply_markup)
-
-
-# === INLINE QUERY (SEARCH BOOKS) ===
-@router.inline_query()
-async def inline_book_search(inline_query: InlineQuery):
-    query = inline_query.query.strip()
-    if not query:
-        return
-
-    url = f"{DJANGO_API_BASE_URL}/books/?search={query}"
-    results = []
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as resp:
-            if resp.status == 200:
-                data = await resp.json()
-                for book in data.get("results", [])[:50]:
-                    title = book.get("title", "بدون عنوان")
-                    subtitle = book.get("subtitle", "")
-                    thumb = book.get("cover", "")
-                    book_id = book.get("parent_asin", "")
-
-                    text = f"/review {book_id}"
-                    results.append(
-                        InlineQueryResultArticle(
-                            id=str(uuid.uuid4()),
-                            title=title,
-                            description=subtitle,
-                            input_message_content=InputTextMessageContent(message_text=text),
-                            thumb_url=thumb
+            async with session.get(url, params=params, timeout=5) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    books = data.get("results", [])[:50]
+                    
+                    if not books:
+                        # No results found
+                        results.append(
+                            InlineQueryResultArticle(
+                                id=str(uuid.uuid4()),
+                                title="❌ نتیجه‌ای یافت نشد",
+                                description=f"کتابی با عبارت '{query}' در دیتابیس یافت نشد",
+                                input_message_content=InputTextMessageContent(
+                                    message_text=f"❌ کتابی با عبارت '{query}' یافت نشد.\n\n"
+                                                f"💡 از جستجوی گسترده استفاده کنید."
+                                )
+                            )
                         )
-                    )
-            else:
-                logger.error(f"Inline search failed: {resp.status}")
+                    else:
+                        # Display found books
+                        for book in books:
+                            title = book.get("title", "بدون عنوان")
+                            authors = book.get("authors", [])
+                            author_name = authors[0].get('name', 'نامشخص') if authors else 'نامشخص'
+                            
+                            rating = book.get("average_rating", "N/A")
+                            book_id = book.get("parent_asin", "")
+                            cover = book.get("cover", "")
+                            
+                            # Create detailed message with book info
+                            isbn = book.get('isbn_13') or book.get('isbn_10', 'ندارد')
+                            rating_count = book.get('rating_number', 0)
+                            
+                            message_text = (
+                                f"✅ <b>کتاب یافت شد!</b>\n\n"
+                                f"📖 <b>عنوان:</b> {title}\n"
+                                f"✒️ <b>نویسنده:</b> {author_name}\n"
+                                f"🔢 <b>ISBN:</b> {isbn}\n"
+                                f"⭐ <b>امتیاز:</b> {rating} (بر اساس {rating_count} رأی)\n\n"
+                                f"💡 اکنون می‌توانید برای این کتاب نقد بنویسید یا آن را در گروه‌ها به اشتراک بگذارید."
+                            )
+                            
+                            # Create inline keyboard for the result
+                            webapp_url = f"{WEBAPP_BASE_URL}/api1/books/{book_id}"
+                            inline_keyboard = [
+                                [{"text": "🔗 مشاهده در وب‌اپ", "url": webapp_url}],
+                                [{"text": "✍️ نوشتن نقد", "callback_data": f"review_{book_id}"}],
+                                [{"text": "🔙 بازگشت به جستجو", "callback_data": "menu_search"}]
+                            ]
+                            
+                            results.append(
+                                InlineQueryResultArticle(
+                                    id=str(uuid.uuid4()),
+                                    title=title,
+                                    description=f"{author_name} • ⭐ {rating}",
+                                    input_message_content=InputTextMessageContent(
+                                        message_text=message_text,
+                                        parse_mode='HTML'
+                                    ),
+                                    reply_markup={"inline_keyboard": inline_keyboard},
+                                    thumb_url=cover if cover else None
+                                )
+                            )
+                else:
+                    logger.error(f"Inline search API error: {resp.status}")
+                    
+        except Exception as e:
+            logger.error(f"Inline search error: {e}")
+    
+    await inline_query.answer(results, cache_time=1, is_personal=True)
 
-    await inline_query.answer(results, cache_time=1)
 
+# === REVIEW CALLBACK FROM SEARCH ===
 
+@router.callback_query(F.data.startswith("review_"))
+async def start_review_from_search(callback: CallbackQuery, state: FSMContext):
+    """Handle review button click from search results"""
+    book_id = callback.data.split("_", 1)[1]  # Get everything after "review_"
+    
+    await callback.answer()
+    
+    # Import review handler
+    from .review import handle_review_request
+    
+    # Call the review handler with proper parameters
+    await handle_review_request(
+        bot=callback.bot,
+        chat_id=callback.message.chat.id if callback.message else callback.from_user.id,
+        message_id=callback.message.message_id if callback.message else None,
+        book_id=book_id,
+        telegram_id=callback.from_user.id,
+        state=state
+    )
