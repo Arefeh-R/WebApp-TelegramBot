@@ -32,8 +32,6 @@ async def show_groups_callback(callback: CallbackQuery):
     await show_groups(callback.message)
     await callback.answer()
 
-
-# --- 1️⃣ Fetch list of groups from DRF ---
 async def fetch_groups():
     async with aiohttp.ClientSession() as session:
         try:
@@ -45,8 +43,6 @@ async def fetch_groups():
             logger.error(f"fetch_groups error: {e}")
     return []
 
-
-# --- 2️⃣ /groups command ---
 @router.message(Command("groups"))
 async def show_groups(message: Message):
     await message.answer("📡 در حال دریافت لیست گروه‌ها...")
@@ -59,7 +55,6 @@ async def show_groups(message: Message):
     if len(groups) > 10:
         await message.answer("⚠️ بیش از ۱۰ گروه موجود است. برای مشاهده کامل لیست، لطفاً از وب‌اپ استفاده کنید.")
 
-    # Send each group separately
     for g in groups:
         group_id = g.get("id")
         name = g.get("name", "بدون نام")
@@ -75,14 +70,8 @@ async def show_groups(message: Message):
         if group_id:
             markup = InlineKeyboardMarkup(
                 inline_keyboard=[
-                    [InlineKeyboardButton(
-                        text="📎 مشاهده لینک گروه",
-                        callback_data=f"show_link_{group_id}"
-                    )],
-                    [InlineKeyboardButton(
-                            text="💬 مشاهده زیرگروه ها",
-                            callback_data=f"show_topics_{group_id}"
-                        )]
+                    [InlineKeyboardButton(text="📎 مشاهده لینک گروه", callback_data=f"show_link_{group_id}" )],
+                    [InlineKeyboardButton(text="💬 مشاهده زیرگروه ها", callback_data=f"show_topics_{group_id}" )]
                 ]
             )
             await message.answer(text, parse_mode="HTML", reply_markup=markup)
@@ -101,14 +90,11 @@ async def show_groups(message: Message):
     await message.answer("👇 اگر گروه مورد نظر خود را پیدا نکردید:", reply_markup=request_button)
 
 
-
-# --- 3️⃣ Callback: show link ---
 @router.callback_query(F.data.startswith("show_link_"))
 async def show_group_link(callback: CallbackQuery):
     group_id = int(callback.data.split("_")[-1])
     telegram_id = callback.from_user.id
 
-    # Step 1: get token for this Telegram user
     async with aiohttp.ClientSession() as session:
         token = await get_token_by_telegram(session, telegram_id)
         if not token:
@@ -118,7 +104,6 @@ async def show_group_link(callback: CallbackQuery):
             await callback.answer()
             return
 
-        # Step 2: fetch group detail (authorized request)
         headers = {"Authorization": f"Bearer {token}"}
         async with session.get(f"{GROUPS_URL}{group_id}/", headers=headers) as resp:
             if resp.status != 200:
@@ -128,7 +113,7 @@ async def show_group_link(callback: CallbackQuery):
             group = await resp.json()
 
     group_name = group.get("name", "گروه")
-    link = group.get("telegram_invite_link")  # <- field in your Django model
+    link = group.get("telegram_invite_link")  
     desc = group.get("description", "بدون توضیح")
 
     if link:

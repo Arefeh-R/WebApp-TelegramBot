@@ -14,7 +14,7 @@ class RequestGroupStates(StatesGroup):
 
 async def start_request_group(message: types.Message, state: FSMContext):
     """This function starts the FSM (used by /request_group or inline button)."""
-    await message.answer("📛 لطفاً نام گروه مورد نظر خود را وارد کنید:")
+    await message.answer("📛 لطفاً نام گروه مورد نظر خود را وارد کنید. نام گروه نباید تکراری باشد.")
     await state.set_state(RequestGroupStates.name)
 
 
@@ -48,6 +48,8 @@ async def get_group_description(message: types.Message, state: FSMContext):
         ) as resp:
             if resp.status == 201:
                 await message.answer("✅ درخواست شما ارسال شد و منتظر تأیید مدیر است.")
+            elif resp.status == 400 and "exists" in (await resp.json()).get("detail", "").lower():
+                await message.answer("❌ نام گروه قبلاً ثبت شده است. لطفاً نام دیگری انتخاب کنید و از مجدد درخواست دهید.")
             else:
                 text = await resp.text()
                 await message.answer(f"❌ خطا در ارسال درخواست: {text}")

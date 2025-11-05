@@ -27,6 +27,7 @@ def setup_dispatcher(dp: Dispatcher) -> None:
     dp.include_router(admin_router)
     dp.include_router(review_router) 
     dp.include_router(topic_router)
+    dp.include_router(account_router)
 
     
     logger.info("All handlers and routers registered.")

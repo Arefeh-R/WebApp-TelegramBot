@@ -72,6 +72,9 @@ class ForumTopic(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        unique_together = ('group', 'name')
+
     def __str__(self):
         return f"{self.name} ({self.group.name})"
     

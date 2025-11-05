@@ -13,41 +13,53 @@ from .serializers import (
     UserBookSerializer,
 )
 from utils.pagination import CustomPageNumberPagination
-from .services.openlibrary_sevice import search_book_in_openlibrary
+from .services.openlibrary_service import search_book_in_openlibrary
 from django.shortcuts import get_object_or_404
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from django.db.models import Q
+
+from django.db.models import F, FloatField, ExpressionWrapper, Value
+from django.db.models.functions import Coalesce
 
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all().prefetch_related("authors")
     serializer_class = BookSerializer
     pagination_class = CustomPageNumberPagination
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-
     search_fields = [
-        "title",              # Partial match on title
-        "^authors__name",     # Starts with for author (better for names)
-        "=isbn_13",          # Exact match for ISBN-13
-        "=isbn_10",          # Exact match for ISBN-10
-        "=parent_asin"       # Exact match for ASIN
+        "title",
+        "^authors__name",
+        "=isbn_13",
+        "=isbn_10",
+        "=parent_asin"
     ]
+    ordering_fields = ["rating_number", "average_rating"]
 
-    ordering_fields = ["publication_date", "average_rating"]
-    
     def get_queryset(self):
-        """Override to handle ISBN queries better"""
         queryset = super().get_queryset()
-        search_param = self.request.query_params.get('search', None)
-        
+        search_param = self.request.query_params.get('search')
+
+        # Handle ISBN-like searches
         if search_param and search_param.replace('-', '').replace(' ', '').isdigit():
             clean_isbn = search_param.replace('-', '').replace(' ', '')
             queryset = queryset.filter(
-                Q(isbn_13__icontains=clean_isbn) | 
+                Q(isbn_13__icontains=clean_isbn) |
                 Q(isbn_10__icontains=clean_isbn) |
                 Q(parent_asin__icontains=clean_isbn)
             ).distinct()
-        
+
+        # ---- Bayesian weighted rating ----
+        C = 3.5  # Global average rating (approx for 1–5 scale)
+        m = 10   # Minimum votes for reliability
+        queryset = queryset.annotate(
+            weighted_rating=ExpressionWrapper(
+                (F("rating_number") / (F("rating_number") + Value(m))) * F("average_rating") +
+                (Value(m) / (F("rating_number") + Value(m))) * Value(C),
+                output_field=FloatField()
+            )
+        ).order_by("-weighted_rating")
+
         return queryset
 
     @action(detail=False, methods=["get"], url_path="top-rated")
@@ -78,18 +90,33 @@ class BookViewSet(viewsets.ModelViewSet):
 
         data = search_book_in_openlibrary(query, query_type)
 
-        if data and "error" not in data:
-            return Response(data, status=status.HTTP_201_CREATED) 
-        elif data and "error" in data:
-            return Response(
-                {"detail": data["error"]}, 
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
-        else:
+        if not data:
             return Response(
                 {"detail": "Book not found via Open Library API for the given query."},
                 status=status.HTTP_404_NOT_FOUND,
             )
+        
+        if isinstance(data, dict) and "error" in data:
+            return Response(
+                {"detail": data["error"]}, 
+                status=status.HTTP_503_SERVICE_UNAVAILABLE
+            )
+        
+        if isinstance(data, list):
+            response_status = status.HTTP_200_OK
+            response_data = data
+        
+        # elif isinstance(data, dict):
+        #     response_status = data.pop('status', status.HTTP_200_OK)
+        #     response_data = data
+        
+        else:
+            return Response(
+                {"detail": "Received invalid data format from external search service."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+            
+        return Response(response_data, status=response_status)
             
     # @action(detail=False, methods=["get"])
     # def popular(self, request):
@@ -126,9 +153,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
             raise ValidationError("You have already reviewed this book.")
         serializer.save(user=user)
 
-    @action(
-        detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated]
-    )
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
         review = get_object_or_404(self.get_queryset(), pk=pk)
         user = request.user

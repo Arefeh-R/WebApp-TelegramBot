@@ -20,7 +20,6 @@ class LoginStates(StatesGroup):
     username = State()
     password = State()
 
-# handlers/login_commands.py (add)
 
 @router.callback_query(F.data == "menu_account")
 async def show_account_menu(callback: CallbackQuery):

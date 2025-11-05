@@ -4,10 +4,11 @@ from django.db import transaction
 from ..models import Book, Author, BookAuthor, BookCategory, Category
 from ..serializers import BookSerializer
 from datetime import datetime
+from rest_framework import status 
+
 OPEN_LIBRARY_BASE_URL = "https://openlibrary.org"
 
 
-# --- START: New Subject Filtering Logic ---
 # 1. Define Exclusions and Mappings
 EXCLUSION_PATTERNS = [
     # General LCSH qualifiers to drop
@@ -21,7 +22,7 @@ EXCLUSION_PATTERNS = [
     # Fictitious Characters or Places
     r"\(fictitious character\)", r"\(imaginary place\)", r"baggins", r"gandalf", r"hobbits",
     r"lord of the rings", r"middle earth", r"terre du milieu", # Specific title/setting references
-    r"literature", r"language", r"english", r"british and irish", # General language/literature
+    r"literature", r"language", "english", "british and irish", # General language/literature
     # Non-genre descriptive terms
     r"novelles", r"romans", r"prose", r"qu\u00eate", r"quests"
 ]
@@ -31,8 +32,6 @@ GENRE_MAPPING = {
     "scifi": "Science Fiction",
     "fantasy fiction": "Fantasy",
     "fantasy": "Fantasy",
-    "ficci\u00f3n fant\u00e1stica": "Fantasy", # Spanish Fantasy fiction
-    "misterio": "Mystery/Thriller", # Spanish Mystery
     "mystery": "Mystery/Thriller",
     "thrillers": "Mystery/Thriller",
     "detective and private investigator stories": "Mystery/Thriller",
@@ -106,8 +105,6 @@ def _clean_and_filter_subjects(raw_subjects: list, limit: int = 5) -> list:
     # Convert set back to a list, sort, and truncate to the limit
     return sorted(list(processed_genres))[:limit]
 
-# --- END: New Subject Filtering Logic ---
-
 
 def _get_amazon_asin(book_data: dict) -> str or None: # type: ignore
     # First, try to extract from identifiers
@@ -130,8 +127,11 @@ def _get_amazon_asin(book_data: dict) -> str or None: # type: ignore
     return None
 
 
-def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, description: str, rating_number: int, average_rating: float) -> Book:
-    """Maps Open Library Edition data to local models and saves them."""
+def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, description: str, rating_number: int, average_rating: float) -> tuple[Book, bool]:
+    """
+    Maps Open Library Edition data to local models and saves/updates them.
+    Returns the Book instance and a boolean indicating if a new book was created (True) or updated (False).
+    """
     
     if ol_data.get('key', '').startswith('/books/'):
         book_data = ol_data
@@ -139,8 +139,8 @@ def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, d
         raise ValueError("Invalid book data structure provided for mapping.")
     
     amazon_asin = _get_amazon_asin(book_data)
-    isbn_10_list = book_data.get('isbn_13')
-    isbn_13 = isbn_10_list[0] if isbn_10_list else None
+    isbn_13_list = book_data.get('isbn_13')
+    isbn_13 = isbn_13_list[0] if isbn_13_list else None
     isbn_10_list = book_data.get('isbn_10')
     isbn_10 = isbn_10_list[0] if isbn_10_list else None
     
@@ -190,6 +190,7 @@ def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, d
 
     
     with transaction.atomic():
+        # update_or_create returns (object, created)
         book_instance, created = Book.objects.update_or_create(
             parent_asin=parent_asin_key,
             defaults={
@@ -197,7 +198,8 @@ def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, d
                 'features': description or None,
                 'publication_date': publication_date,
                 'isbn_13': isbn_13,
-                'isbn_10': book_data.get('isbn_10', [None])[0] if book_data.get('isbn_10') else isbn_13,
+                # Use isbn_13 as isbn_10 fallback if isbn_10 is missing but isbn_13 exists
+                'isbn_10': book_data.get('isbn_10', [None])[0] if book_data.get('isbn_10') else (isbn_13 if isbn_13 and len(isbn_13) == 10 else None),
                 'average_rating': average_rating,
                 'rating_number': rating_number,
                 'main_category': 'Books'
@@ -219,7 +221,7 @@ def _map_and_save_book(ol_data: dict, author_names: list, subject_names: list, d
         ]
         BookCategory.objects.bulk_create(book_categories_to_create, ignore_conflicts=True)
                  
-        return book_instance
+        return book_instance, created
 
 def get_full_edition_data(edition_key: str) -> dict | None:
     """Fetches full metadata for a specific Edition key (/books/OL...M)."""
@@ -248,43 +250,53 @@ def get_description_data(work_key: str) -> str or None: # type: ignore
         print(f"Error fetching description data for {work_key}: {e}")
         return None
 
-def search_book_in_openlibrary(query: str, query_type: str) -> dict | None:
+def search_book_in_openlibrary(query: str, query_type: str) -> dict | None | list:
     """
-    Step 1: Determines API route based on query_type.
+    Step 1: Determines API route based on query_type (handle author list).
     Step 2: Fetches data.
     Step 3: Maps and saves the full data.
     """   
     
+    if query_type not in ['title', 'author', 'isbn']:
+        return {"error": f"Invalid query_type: {query_type}"}
+
     try:
-            
-        if query_type == 'title' or query_type == 'author' or query_type == 'isbn':             
-            
-            params = {
-                query_type: query,
-                'fields': 'key,title,author_name,editions,subject,source_records,ratings_average,ratings_count'
-            }
-            search_url = f"{OPEN_LIBRARY_BASE_URL}/search.json"
-            
-            search_response = requests.get(search_url, params=params, timeout=5)
-            search_response.raise_for_status()
-            search_data = search_response.json()
-            
-            if search_data.get('numFound', 0) == 0 or not search_data.get('docs'):
-                return None # No work found
-            
-            first_doc = search_data['docs'][0]
+        limit = 5 #if query_type == 'author' else 1
+        
+        params = {
+            query_type: query,
+            'fields': 'key,title,author_name,editions,subject,source_records,ratings_average,ratings_count,number_of_pages_median',
+            'limit': limit
+        }
+        search_url = f"{OPEN_LIBRARY_BASE_URL}/search.json"
+        
+        search_response = requests.get(search_url, params=params, timeout=5)
+        search_response.raise_for_status()
+        search_data = search_response.json()
+        
+        if search_data.get('numFound', 0) == 0 or not search_data.get('docs'):
+            return None # No work found
+
+        results = []
+        # Iterate over up to 5 documents for author search, or 1 for others
+        docs_to_process = search_data['docs'][:limit]
+
+        for first_doc in docs_to_process:
             
             edition_docs = first_doc.get('editions', {}).get('docs')
             
             if not edition_docs:
-                return None 
+                continue 
             
-            edition_key = edition_docs[0].get('key') # The key is now the Edition Key (e.g., /books/OL51711484M)
+            edition_key = edition_docs[0].get('key') # The key is the Edition Key (e.g., /books/OL51711484M)
             
             if not edition_key:
-                 return None 
+                 continue 
 
             ol_data = get_full_edition_data(edition_key)
+            
+            if not ol_data:
+                continue
             
             author_names = first_doc.get('author_name', ['Unknown Author'])
             
@@ -293,18 +305,19 @@ def search_book_in_openlibrary(query: str, query_type: str) -> dict | None:
             
             description = get_description_data(first_doc.get('key')) # first_doc key is the Work Key
             
-            average_rating = first_doc.get('ratings_average',0.0)
+            average_rating = first_doc.get('ratings_average', 0.0)
             rating_number = first_doc.get('ratings_count', 0)
             
-            if not ol_data:
-                return None 
-        
-        else:
-            return {"error": f"Invalid query_type: {query_type}"}
+            new_book, created = _map_and_save_book(ol_data, author_names, subject_names, description, rating_number, average_rating)
+            
+            book_data = BookSerializer(new_book).data
+            book_data['status'] = status.HTTP_201_CREATED if created else status.HTTP_200_OK
+            results.append(book_data)
 
-        new_book = _map_and_save_book(ol_data, author_names, subject_names, description, rating_number, average_rating)
-        
-        return BookSerializer(new_book).data
+        if not results:
+             return None 
+             
+        return results#[0] if query_type != 'author' else results
 
             
     except requests.exceptions.HTTPError as e:

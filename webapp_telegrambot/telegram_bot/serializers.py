@@ -5,7 +5,7 @@ from library.models import Review
 class ForumTopicSerializer(serializers.ModelSerializer):
     class Meta:
         model = ForumTopic
-        fields = ["id", "name", "group", "topic_id", "is_active"]
+        fields = ["id", "name", "group", "topic_id", "is_active", "description"]
 
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:

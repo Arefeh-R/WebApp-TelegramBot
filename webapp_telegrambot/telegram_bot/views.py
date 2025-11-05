@@ -44,9 +44,12 @@ class GroupViewSet(viewsets.ModelViewSet):
 
         if not name:
             return Response({"detail": "Group name is required"}, status=status.HTTP_400_BAD_REQUEST)
-
+        
+        if Group.objects.filter(name=name).exists():
+            return Response({"detail": "Group name already exists"}, status=status.HTTP_400_BAD_REQUEST)
+        
         group = Group.objects.create(
-            id = 0,
+            id=0,
             name=name,
             description=description or "",
             requested_by=request.user,

@@ -54,6 +54,7 @@ def get_account_menu():
         [InlineKeyboardButton(text="🔐 ورود به حساب", callback_data="account_login")],
         [InlineKeyboardButton(text="📊 وضعیت حساب", callback_data="account_status")],
         [InlineKeyboardButton(text="🚪 خروج از حساب", callback_data="account_logout")],
+        [InlineKeyboardButton(text="✍️نقد های من ", callback_data="account_reviews")],
         [InlineKeyboardButton(text="🔙 بازگشت", callback_data="main_menu")],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
@@ -62,7 +63,6 @@ def get_groups_menu():
     """Groups submenu"""
     keyboard = [
         [InlineKeyboardButton(text="📋 لیست گروه‌ها", callback_data="groups_list")],
-        [InlineKeyboardButton(text="➕ درخواست گروه جدید", callback_data="groups_request")],
         [InlineKeyboardButton(text="🔙 بازگشت", callback_data="main_menu")],
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

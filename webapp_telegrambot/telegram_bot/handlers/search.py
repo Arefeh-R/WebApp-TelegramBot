@@ -19,11 +19,9 @@ from ..config import WEBAPP_BASE_URL, DJANGO_API_BASE_URL
 router = Router()
 logger = logging.getLogger(__name__)
 
-# === FSM STATES ===
 class ExternalSearchStates(StatesGroup):
     waiting_for_query = State()
 
-# === MENU HANDLERS ===
 
 @router.callback_query(F.data == "menu_search")
 async def show_search_menu(callback: CallbackQuery):
@@ -70,7 +68,6 @@ async def external_search_prompt(callback: CallbackQuery, state: FSMContext):
     """Prompt user for external search query"""
     search_type = callback.data.split("_")[-1]  # title, author, or isbn
     
-    # Store search type in FSM
     await state.update_data(search_type=search_type)
     await state.set_state(ExternalSearchStates.waiting_for_query)
     
@@ -83,8 +80,6 @@ async def external_search_prompt(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer(prompts.get(search_type, "لطفاً عبارت جستجو را وارد کنید:"))
     await callback.answer()
 
-
-# === EXTERNAL SEARCH HANDLER ===
 
 @router.message(ExternalSearchStates.waiting_for_query)
 async def handle_external_search(message: Message, state: FSMContext):
@@ -108,11 +103,32 @@ async def handle_external_search(message: Message, state: FSMContext):
     
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.get(url, params=params, timeout=15) as response:
-                if response.status == 201:
-                    # Book found and added to database
-                    book_data = await response.json()
-                    await display_external_search_result(message, book_data)
+            async with session.get(url, params=params, timeout=25) as response:
+                if response.status in (200, 201):
+                    # Book(s) found and added to database
+                    response_data = await response.json()
+                    
+                    # Check if it's a single book or multiple books (author search returns list)
+                    if isinstance(response_data, list):
+                        # Multiple books (author search)
+                        if len(response_data) == 0:
+                            await message.answer(
+                                "❌ متأسفانه کتابی با این مشخصات در Open Library یافت نشد.\n\n"
+                                "💡 پیشنهاد:\n"
+                                "• املای عبارت جستجو را بررسی کنید\n"
+                                "• از جستجوی سریع (Inline) استفاده کنید"
+                            )
+                        else:
+                            await message.answer(
+                                f"✅ <b>{len(response_data)} کتاب یافت شد و به دیتابیس اضافه شد!</b>",
+                                parse_mode='HTML'
+                            )
+                            # Display each book
+                            for book_data in response_data:
+                                await display_external_search_result(message, book_data)
+                    else:
+                        # Single book (title or ISBN search)
+                        await display_external_search_result(message, response_data)
                     
                 elif response.status == 404:
                     await message.answer(
@@ -147,18 +163,21 @@ async def display_external_search_result(message: Message, book_data: Dict[str, 
     title = book_data.get('title', 'عنوان نامشخص')
     authors = book_data.get('authors', [])
     author_names = ', '.join([a.get('name', 'نامشخص') for a in authors]) if authors else 'نامشخص'
-    
     isbn = book_data.get('isbn_13') or book_data.get('isbn_10', 'ندارد')
     book_id = book_data.get('parent_asin')
     cover = book_data.get('cover', '')
+    rating_count = book_data.get('rating_number',0)
+    rating = book_data.get('average_rating','ندارد')
     
     text = (
-        f"✅ <b>کتاب یافت شد و به دیتابیس اضافه شد!</b>\n\n"
-        f"📖 <b>عنوان:</b> {title}\n"
-        f"✒️ <b>نویسنده:</b> {author_names}\n"
-        f"🔢 <b>ISBN:</b> {isbn}\n\n"
-        f"💡 اکنون می‌توانید برای این کتاب نقد بنویسید یا آن را در گروه‌ها به اشتراک بگذارید."
-    )
+            f"✅ <b>کتاب یافت شد!</b>\n\n"
+            f"📖 <b>عنوان:</b> {title}\n"
+            f"✒️ <b>نویسنده:</b> {author_names}\n"
+            f"🔢 <b>ISBN:</b> {isbn}\n"
+            f"🔢<b>کد کتاب:</b> {book_id}\n"
+            f"⭐ <b>امتیاز:</b> {rating} (بر اساس {rating_count} رأی)\n\n"
+            f"💡 اکنون می‌توانید برای این کتاب نقد بنویسید یا آن را در گروه‌ها به اشتراک بگذارید."
+        )
     
     # Create inline buttons
     buttons = []
@@ -174,7 +193,8 @@ async def display_external_search_result(message: Message, book_data: Dict[str, 
     if cover:
         try:
             await message.answer_photo(photo=cover, caption=text, parse_mode='HTML', reply_markup=markup)
-        except:
+        except Exception as e:
+            logger.warning(f"Failed to send photo: {e}")
             await message.answer(text, parse_mode='HTML', reply_markup=markup)
     else:
         await message.answer(text, parse_mode='HTML', reply_markup=markup)
@@ -206,7 +226,7 @@ async def inline_book_search(inline_query: InlineQuery):
     url = f"{DJANGO_API_BASE_URL}/books/"
     params = {
         'search': query,
-        'ordering': '-average_rating'
+        'ordering': '-rating_number'
     }
     
     results = []
@@ -237,12 +257,9 @@ async def inline_book_search(inline_query: InlineQuery):
                             title = book.get("title", "بدون عنوان")
                             authors = book.get("authors", [])
                             author_name = authors[0].get('name', 'نامشخص') if authors else 'نامشخص'
-                            
-                            rating = book.get("average_rating", "N/A")
+                            rating = book.get("average_rating", "ندارد")
                             book_id = book.get("parent_asin", "")
                             cover = book.get("cover", "")
-                            
-                            # Create detailed message with book info
                             isbn = book.get('isbn_13') or book.get('isbn_10', 'ندارد')
                             rating_count = book.get('rating_number', 0)
                             
@@ -251,6 +268,7 @@ async def inline_book_search(inline_query: InlineQuery):
                                 f"📖 <b>عنوان:</b> {title}\n"
                                 f"✒️ <b>نویسنده:</b> {author_name}\n"
                                 f"🔢 <b>ISBN:</b> {isbn}\n"
+                                f"🔢 <b>کد کتاب:</b> {book_id}\n"
                                 f"⭐ <b>امتیاز:</b> {rating} (بر اساس {rating_count} رأی)\n\n"
                                 f"💡 اکنون می‌توانید برای این کتاب نقد بنویسید یا آن را در گروه‌ها به اشتراک بگذارید."
                             )
@@ -267,7 +285,7 @@ async def inline_book_search(inline_query: InlineQuery):
                                 InlineQueryResultArticle(
                                     id=str(uuid.uuid4()),
                                     title=title,
-                                    description=f"{author_name} • ⭐ {rating}",
+                                    description=f"{author_name} • ⭐ {rating} • {rating_count} رأی",
                                     input_message_content=InputTextMessageContent(
                                         message_text=message_text,
                                         parse_mode='HTML'
@@ -282,7 +300,7 @@ async def inline_book_search(inline_query: InlineQuery):
         except Exception as e:
             logger.error(f"Inline search error: {e}")
     
-    await inline_query.answer(results, cache_time=1, is_personal=True)
+    await inline_query.answer(results, cache_time=60, is_personal=True)
 
 
 # === REVIEW CALLBACK FROM SEARCH ===

@@ -44,16 +44,17 @@ class BookSerializer(serializers.ModelSerializer):
 
 # Assuming your user model has a 'username' or 'get_full_name' method
 class ReviewSerializer(serializers.ModelSerializer):
-    
+
+    book = BookSerializer(read_only=True)
     reviewer_display = serializers.SerializerMethodField()
 
     class Meta:
         model = Review
         fields = (
-            'review_id', 'book', 'rating', 'title', 'review_text', 
-            'helpful_vote', 'verified_purchase', 'review_date', 
+            'review_id', 'book', 'rating', 'title', 'review_text',
+            'helpful_vote', 'verified_purchase', 'review_date',
             'reviewer_display' # Include the new display field
-            # Do NOT include 'user' or 'amazon_user_id' in writable fields 
+            # Do NOT include 'user' or 'amazon_user_id' in writable fields
             # as they are set in the view
         )
         read_only_fields = ('helpful_vote',)
