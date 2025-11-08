@@ -1,10 +1,10 @@
 import aiohttp
 import logging
-from aiogram import Router, F, types
+from aiogram import Router, F
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery, Message
 from aiogram.filters import Command
 from ..config import DJANGO_API_BASE_URL
-from .login import get_token_by_telegram
+from ..utils.auth_helper import get_token_by_telegram
 from aiogram.fsm.context import FSMContext
 from .request_group import start_request_group
 from ..keyboards.main_menu import get_groups_menu

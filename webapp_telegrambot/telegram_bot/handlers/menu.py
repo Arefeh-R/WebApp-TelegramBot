@@ -1,4 +1,4 @@
-# handlers/menu.py
+
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
@@ -16,7 +16,7 @@ async def show_main_menu(message: Message):
         "لطفاً یکی از گزینه‌های زیر را انتخاب کنید:"
     )
     
-    # Check if user is admin (you'll need to implement this check)
+    # Check if user is admin (not implemented yet)
     is_admin = False  # Replace with actual admin check
     
     if is_admin:
@@ -35,16 +35,3 @@ async def back_to_main_menu(callback: CallbackQuery):
     )
     await callback.answer()
     
-    # @router.message(Command("start"))
-    # async def command_start_handler(message: Message) -> None:
-    #     """
-    #     Handles the /start command.
-    #     """
-    #     user_name = message.from_user.full_name
-    #     welcome_message = (
-    #         f"👋 درود بر شما، {user_name}!\n\n"
-    #         "به ربات باشگاه کتاب خوش آمدید. من اینجا هستم تا به شما در مدیریت چالش‌های خواندن، جستجوی کتاب و بحث‌های گروهی کمک کنم.\n\n"
-    #         "لطفاً از /help برای دیدن لیست دستورات استفاده کنید."
-    #     )
-
-    #     await message.answer(welcome_message)

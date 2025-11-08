@@ -13,7 +13,7 @@ from aiogram.fsm.context import FSMContext
 import aiohttp
 import logging
 import uuid
-from typing import Dict, Any, List
+from typing import Dict, Any
 from ..config import WEBAPP_BASE_URL, DJANGO_API_BASE_URL
 
 router = Router()

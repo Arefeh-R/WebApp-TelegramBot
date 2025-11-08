@@ -21,7 +21,6 @@ def get_admin_menu():
     ]
     return InlineKeyboardMarkup(inline_keyboard=keyboard)
 
-# keyboards/main_menu.py
 
 def get_search_menu():
     """Search submenu with inline and external options"""

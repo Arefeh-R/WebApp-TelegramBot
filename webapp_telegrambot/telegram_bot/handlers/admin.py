@@ -3,7 +3,7 @@ from aiogram import Router, types
 from aiogram.filters import Command, BaseFilter
 from aiogram.enums.chat_type import ChatType
 from ..config import DJANGO_API_BASE_URL ,BOT_USERNAME, BOT_PASSWORD
-from .token_fetcher import get_valid_access_token
+from ..utils.token_fetcher import get_valid_access_token
 
 API_ENDPOINT = f"{DJANGO_API_BASE_URL}/groups/"
 COMMAND_NAME = "register_group" 

@@ -6,7 +6,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, C
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from ..config import DJANGO_API_BASE_URL
-from .login import get_token_by_telegram
+from ..utils.auth_helper import get_token_by_telegram
 
 router = Router()
 logger = logging.getLogger(__name__)

@@ -1,4 +1,3 @@
-# handlers/topic.py
 import aiohttp
 import logging
 from aiogram import Router, types, F, Bot
@@ -6,7 +5,7 @@ from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQu
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
 from ..config import DJANGO_API_BASE_URL
-from .login import get_token_by_telegram
+from ..utils.auth_helper import get_token_by_telegram
 
 router = Router()
 logger = logging.getLogger(__name__)
