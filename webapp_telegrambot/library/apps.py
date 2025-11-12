@@ -5,4 +5,5 @@ class LibraryConfig(AppConfig):
     name = 'library'
 
     def ready(self):
-        import library.signals 
+        # import signals to wire handlers
+        from . import signals  # noqa
