@@ -34,7 +34,7 @@ class BookViewSet(viewsets.ModelViewSet):
         "=isbn_10",
         "=parent_asin"
     ]
-    ordering_fields = ["rating_number", "average_rating"]
+    ordering_fields = ["weighted_rating", "rating_number", "average_rating", "publication_date"]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -49,18 +49,15 @@ class BookViewSet(viewsets.ModelViewSet):
                 Q(parent_asin__icontains=clean_isbn)
             ).distinct()
 
-        # ---- Bayesian weighted rating ----
-        C = 3.5  # Global average rating (approx for 1–5 scale)
-        m = 10   # Minimum votes for reliability
-        queryset = queryset.annotate(
-            weighted_rating=ExpressionWrapper(
-                (F("rating_number") / (F("rating_number") + Value(m))) * F("average_rating") +
-                (Value(m) / (F("rating_number") + Value(m))) * Value(C),
-                output_field=FloatField()
-            )
-        ).order_by("-weighted_rating")
+        # Apply user ordering via DRF first
+        queryset = self.filter_queryset(queryset)
 
-        return queryset
+        # Then append weighted ordering for stability
+        return queryset.order_by(
+            *queryset.query.order_by,
+            F("weighted_rating").desc(nulls_last=True),
+            F("average_rating").desc(nulls_last=True)
+        )
 
     @action(detail=False, methods=["get"], url_path="top-rated")
     def top_rated(self, request):

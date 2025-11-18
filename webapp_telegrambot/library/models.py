@@ -105,7 +105,7 @@ class BookCategory(models.Model):
 
 class Image(models.Model):
     image_id = models.AutoField(primary_key=True)
-    book = models.ForeignKey("Book", models.DO_NOTHING, db_column="book_id")
+    book = models.ForeignKey("Book", models.DO_NOTHING, db_column="book_id", related_name="images")
     large_url = models.TextField()
     variant = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
