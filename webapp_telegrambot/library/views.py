@@ -145,10 +145,11 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        book_pk = serializer.validated_data.get("book").pk
-        if Review.objects.filter(book__pk=book_pk, user=user).exists():
+        book_pk = self.kwargs.get("book_pk")
+        book = get_object_or_404(Book, pk=book_pk)
+        if Review.objects.filter(book=book, user=user).exists():
             raise ValidationError("You have already reviewed this book.")
-        serializer.save(user=user)
+        serializer.save(user=user, book=book)
 
     @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):

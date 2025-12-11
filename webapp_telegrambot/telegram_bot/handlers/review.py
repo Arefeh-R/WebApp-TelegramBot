@@ -231,9 +231,8 @@ async def receive_review_text(message: Message, state: FSMContext):
         success_msg = "✅ نقد شما با موفقیت ویرایش شد!"
     else:
         # Create new review
-        url = REVIEWS_URL
+        url = BOOK_REVIEWS_URL(book_id)
         payload = {
-            "book": book_id, 
             "review_text": review_text, 
             "rating": final_rating, 
             "title": final_title   

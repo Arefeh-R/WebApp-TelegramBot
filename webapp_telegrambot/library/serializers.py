@@ -51,11 +51,9 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = (
-            'review_id', 'book', 'rating', 'title', 'review_text',
+            'review_id', 'book', 'book_id', 'rating', 'title', 'review_text',
             'helpful_vote', 'verified_purchase', 'review_date',
-            'reviewer_display' # Include the new display field
-            # Do NOT include 'user' or 'amazon_user_id' in writable fields
-            # as they are set in the view
+            'reviewer_display' 
         )
         read_only_fields = ('helpful_vote',)
 
