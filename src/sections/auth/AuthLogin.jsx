@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import { Link as RouterLink } from 'react-router-dom';
+import { useState } from 'react';
 
 // material-ui
 import Button from '@mui/material/Button';
@@ -22,6 +23,7 @@ import { Formik } from 'formik';
 // project imports
 import IconButton from 'components/@extended/IconButton';
 import AnimateButton from 'components/@extended/AnimateButton';
+import useAuth from 'hooks/useAuth'; 
 
 // assets
 import EyeOutlined from '@ant-design/icons/EyeOutlined';
@@ -29,10 +31,11 @@ import EyeInvisibleOutlined from '@ant-design/icons/EyeInvisibleOutlined';
 
 // ============================|| JWT - LOGIN ||============================ //
 
-export default function AuthLogin({ isDemo = false }) {
-  const [checked, setChecked] = React.useState(false);
 
-  const [showPassword, setShowPassword] = React.useState(false);
+const AuthLogin = () => {
+  const [showPassword, setShowPassword] = useState(false);
+  const { login } = useAuth(); 
+
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
@@ -45,23 +48,37 @@ export default function AuthLogin({ isDemo = false }) {
     <>
       <Formik
         initialValues={{
-          email: 'info@codedthemes.com',
-          password: '123456',
+          email: '',
+          password: '',
           submit: null
         }}
         validationSchema={Yup.object().shape({
-          email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-          password: Yup.string()
-            .required('Password is required')
-            .test('no-leading-trailing-whitespace', 'Password cannot start or end with spaces', (value) => value === value.trim())
-            .max(10, 'Password must be less than 10 characters')
+          email: Yup.string().max(255).required('Email is required'),
+          password: Yup.string().max(255).required('Password is required')
         })}
+        onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
+          try {
+            const result = await login(values.email, values.password);
+            
+            if (result.success) {
+              setStatus({ success: true });
+            } else {
+              setStatus({ success: false });
+              setErrors({ submit: result.error });
+            }
+          } catch (err) {
+            setStatus({ success: false });
+            setErrors({ submit: err.message });
+          } finally {
+            setSubmitting(false);
+          }
+        }}
       >
-        {({ errors, handleBlur, handleChange, touched, values }) => (
-          <form noValidate>
+        {({ errors, handleBlur, handleChange, handleSubmit, isSubmitting, touched, values }) => (
+          <form noValidate onSubmit={handleSubmit}>
             <Grid container spacing={3}>
-              <Grid size={12}>
-                <Stack sx={{ gap: 1 }}>
+              <Grid item xs={12}>
+                <Stack spacing={1}>
                   <InputLabel htmlFor="email-login">Email Address</InputLabel>
                   <OutlinedInput
                     id="email-login"
@@ -74,15 +91,15 @@ export default function AuthLogin({ isDemo = false }) {
                     fullWidth
                     error={Boolean(touched.email && errors.email)}
                   />
+                  {touched.email && errors.email && (
+                    <FormHelperText error id="standard-weight-helper-text-email-login">
+                      {errors.email}
+                    </FormHelperText>
+                  )}
                 </Stack>
-                {touched.email && errors.email && (
-                  <FormHelperText error id="standard-weight-helper-text-email-login">
-                    {errors.email}
-                  </FormHelperText>
-                )}
               </Grid>
-              <Grid size={12}>
-                <Stack sx={{ gap: 1 }}>
+              <Grid item xs={12}>
+                <Stack spacing={1}>
                   <InputLabel htmlFor="password-login">Password</InputLabel>
                   <OutlinedInput
                     fullWidth
@@ -100,7 +117,7 @@ export default function AuthLogin({ isDemo = false }) {
                           onClick={handleClickShowPassword}
                           onMouseDown={handleMouseDownPassword}
                           edge="end"
-                          color="secondary"
+                          size="large"
                         >
                           {showPassword ? <EyeOutlined /> : <EyeInvisibleOutlined />}
                         </IconButton>
@@ -108,35 +125,31 @@ export default function AuthLogin({ isDemo = false }) {
                     }
                     placeholder="Enter password"
                   />
-                </Stack>
-                {touched.password && errors.password && (
-                  <FormHelperText error id="standard-weight-helper-text-password-login">
-                    {errors.password}
-                  </FormHelperText>
-                )}
-              </Grid>
-              <Grid sx={{ mt: -1 }} size={12}>
-                <Stack direction="row" sx={{ gap: 2, alignItems: 'baseline', justifyContent: 'space-between' }}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={checked}
-                        onChange={(event) => setChecked(event.target.checked)}
-                        name="checked"
-                        color="primary"
-                        size="small"
-                      />
-                    }
-                    label={<Typography variant="h6">Keep me sign in</Typography>}
-                  />
-                  <Link variant="h6" component={RouterLink} to="#" color="text.primary">
-                    Forgot Password?
-                  </Link>
+                  {touched.password && errors.password && (
+                    <FormHelperText error id="standard-weight-helper-text-password-login">
+                      {errors.password}
+                    </FormHelperText>
+                  )}
                 </Stack>
               </Grid>
-              <Grid size={12}>
+
+              {errors.submit && (
+                <Grid item xs={12}>
+                  <FormHelperText error>{errors.submit}</FormHelperText>
+                </Grid>
+              )}
+
+              <Grid item xs={12}>
                 <AnimateButton>
-                  <Button fullWidth size="large" variant="contained" color="primary">
+                  <Button
+                    disableElevation
+                    disabled={isSubmitting}
+                    fullWidth
+                    size="large"
+                    type="submit"
+                    variant="contained"
+                    color="primary"
+                  >
                     Login
                   </Button>
                 </AnimateButton>
@@ -147,6 +160,6 @@ export default function AuthLogin({ isDemo = false }) {
       </Formik>
     </>
   );
-}
+};
 
-AuthLogin.propTypes = { isDemo: PropTypes.bool };
+export default AuthLogin;

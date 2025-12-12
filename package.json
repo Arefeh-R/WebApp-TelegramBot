@@ -28,7 +28,8 @@
     "@mui/system": "7.3.3",
     "@mui/x-charts": "8.14.0",
     "@vitejs/plugin-react": "5.0.4",
-    "formik": "2.4.6",
+    "axios": "^1.13.2",
+    "formik": "^2.4.9",
     "framer-motion": "12.23.24",
     "lodash-es": "4.17.21",
     "react": "19.2.0",
@@ -38,11 +39,11 @@
     "react-router": "7.9.4",
     "react-router-dom": "7.9.4",
     "simplebar-react": "3.3.2",
-    "swr": "2.3.6",
+    "swr": "^2.3.7",
     "vite": "7.1.9",
     "vite-jsconfig-paths": "2.0.1",
     "web-vitals": "5.1.0",
-    "yup": "1.7.1"
+    "yup": "^1.7.1"
   },
   "eslintConfig": {
     "extends": [
@@ -66,6 +67,8 @@
     "@eslint/compat": "1.4.0",
     "@eslint/eslintrc": "3.3.1",
     "@eslint/js": "9.37.0",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
     "eslint": "9.37.0",
     "eslint-config-prettier": "10.1.2",
     "eslint-plugin-jsx-a11y": "6.10.2",
