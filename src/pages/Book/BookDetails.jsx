@@ -17,10 +17,10 @@ import {
   HeartOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
-  BookOutlined,
+  ArrowLeftOutlined,
   CalendarOutlined,
-  FileTextOutlined,
-  ArrowLeftOutlined
+  BookOutlined,
+  FileTextOutlined
 } from '@ant-design/icons';
 
 // project imports
@@ -33,7 +33,7 @@ import { addBookToLibrary } from 'hooks/useBooks';
 
 // ==============================|| BOOK DETAIL PAGE ||============================== //
 
-function BookDetail() {
+export default function BookDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { book, bookLoading, bookError } = useGetBook(id);
@@ -42,126 +42,79 @@ function BookDetail() {
 
   const handleAddToLibrary = async (status) => {
     setAddingToLibrary(true);
-    const bookId = book.parent_asin || id;
-    const result = await addBookToLibrary(bookId, status);
+    await addBookToLibrary(book.parent_asin || id, status);
     setAddingToLibrary(false);
-
-    if (result.success) {
-      alert('Book added to your library!');
-    } else {
-      alert('Failed to add book: ' + result.error);
-    }
-  };
-
-  const handleSubmitReview = async (reviewData) => {
-    const bookId = book.parent_asin || id;
-    const result = await addReview(bookId, reviewData);
-    if (result.success) {
-      alert('Review submitted successfully!');
-    } else {
-      alert('Failed to submit review: ' + result.error);
-    }
-  };
-
-  const handleUpdateReview = async (reviewId, reviewData) => {
-    const bookId = book.parent_asin || id;
-    const result = await updateReview(bookId, reviewId, reviewData);
-    if (result.success) {
-      alert('Review updated successfully!');
-    } else {
-      alert('Failed to update review: ' + result.error);
-    }
-  };
-
-  const handleDeleteReview = async (reviewId) => {
-    const bookId = book.parent_asin || id;
-    const result = await deleteReview(bookId, reviewId);
-    if (result.success) {
-      alert('Review deleted successfully!');
-    } else {
-      alert('Failed to delete review: ' + result.error);
-    }
   };
 
   if (bookLoading) {
     return (
-      <Grid container rowSpacing={4.5} columnSpacing={2.75}>
-        <Grid item xs={12}>
-          <MainCard>
-            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
-              <Stack spacing={2} alignItems="center">
-                <CircularProgress size={60} />
-                <Typography variant="body1" color="text.secondary">
-                  Loading book details...
-                </Typography>
-              </Stack>
-            </Box>
-          </MainCard>
-        </Grid>
-      </Grid>
+      <MainCard>
+        <Stack alignItems="center" spacing={2} sx={{ py: 8 }}>
+          <CircularProgress size={60} />
+          <Typography color="text.secondary">Loading book details…</Typography>
+        </Stack>
+      </MainCard>
     );
   }
 
   if (bookError || !book) {
     return (
-      <Grid container rowSpacing={4.5} columnSpacing={2.75}>
-        <Grid item xs={12}>
-          <MainCard>
-            <Alert severity="error">
-              <Typography variant="h6">Error loading book details</Typography>
-              <Typography variant="body2">The book could not be found or loaded.</Typography>
-            </Alert>
-          </MainCard>
-        </Grid>
-      </Grid>
+      <MainCard>
+        <Alert severity="error">
+          <Typography variant="h6">Failed to load book</Typography>
+        </Alert>
+      </MainCard>
     );
   }
 
-  // Extract book data with proper field names
+  // ---------- extracted data ----------
   const cover = book.image_url || 'https://via.placeholder.com/300x450?text=No+Cover';
-  const authorText = book.authors && Array.isArray(book.authors) 
-    ? book.authors.map((a) => a.name).filter(Boolean).join(', ') 
-    : 'Unknown Author';
-  const avgRating = parseFloat(book.average_rating) || 0;
-  const reviewsCount = book.rating_number || 0;
-  
-  // Extract publication info from details_jsonb or publication_date
-  const publishedYear = book.publication_date 
-    ? new Date(book.publication_date).getFullYear()
-    : null;
-  
-  // Extract pages from details_jsonb
-  const pagesInfo = book.details_jsonb?.Paperback || 
-                    book.details_jsonb?.['Bonded Leather'] || 
-                    book.details_jsonb?.Hardcover;
-  const pages = pagesInfo ? pagesInfo.match(/\d+/)?.[0] : null;
-  
-  // Get ISBN
-  const isbn = book.isbn_13 || book.isbn_10 || book.details_jsonb?.['ISBN 13'] || book.details_jsonb?.['ISBN 10'];
+  const authors = book.authors?.map((a) => a.name).join(', ') || 'Unknown';
+  const rating = Number(book.average_rating) || 0;
+  const ratingCount = book.rating_number || 0;
+  const year = book.publication_date ? new Date(book.publication_date).getFullYear() : null;
+  const pages =
+    book.details_jsonb?.Paperback?.match(/\d+/)?.[0] ||
+    book.details_jsonb?.Hardcover?.match(/\d+/)?.[0];
+  const isbn = book.isbn_13 || book.isbn_10;
 
   return (
-  <Grid container rowSpacing={4.5} columnSpacing={2.75}>
-    {/* Back */}
-    <Grid item xs={12}>
-      <Button
-        variant="text"
-        startIcon={<ArrowLeftOutlined />}
-        onClick={() => navigate(-1)}
-        color="secondary"
-      >
-        Back to list
-      </Button>
-    </Grid>
+    <Grid container spacing={3}>
+      {/* Back */}
+      <Grid item xs={12}>
+        <Button
+          startIcon={<ArrowLeftOutlined />}
+          variant="outlined"
+          onClick={() => navigate(-1)}
+        >
+          Back
+        </Button>
+      </Grid>
 
-    {/* Book Overview */}
-    <Grid item xs={12}>
-      <MainCard>
-        <Grid container spacing={4}>
-          {/* LEFT: Cover + Actions */}
-          <Grid item xs={12} md={4}>
-            <Stack spacing={3}>
+      {/* MAIN LAYOUT */}
+      <Grid
+        item
+        xs={12}
+      >
+        <Grid
+          container
+          spacing={3}
+          alignItems="stretch"
+          direction={{ xs: 'column', md: 'row' }}
+        >
+          {/* COVER COLUMN */}
+          <Grid item xs={12} md={4} lg={3}>
+            <MainCard
+              sx={{
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column'
+              }}
+            >
               <Box
                 sx={{
+                  width: '100%',
+                  aspectRatio: '2 / 3',
                   borderRadius: 2,
                   overflow: 'hidden',
                   bgcolor: 'grey.100'
@@ -171,32 +124,111 @@ function BookDetail() {
                   component="img"
                   image={cover}
                   alt={book.title}
-                  sx={{
-                    width: '100%',
-                    aspectRatio: '2 / 3',
-                    objectFit: 'cover'
-                  }}
+                  sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
                 />
               </Box>
+            </MainCard>
+          </Grid>
 
-              {/* Add to Library */}
+          {/* CONTENT + ACTIONS */}
+          <Grid item xs={12} md={8} lg={9}>
+            <Stack spacing={3} height="100%">
+              {/* BOOK INFO */}
+              <MainCard>
+                <Stack spacing={3}>
+                  <Box>
+                    <Typography variant="h2">{book.title}</Typography>
+                    <Typography variant="h5" color="text.secondary">
+                      by {authors}
+                    </Typography>
+                  </Box>
+
+                  {/* Rating */}
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Rating value={rating} precision={0.1} readOnly />
+                    <Typography variant="h4" color="primary">
+                      {rating.toFixed(1)}
+                    </Typography>
+                    <Chip
+                      label={`${ratingCount} ratings`}
+                      color="primary"
+                      size="small"
+                    />
+                  </Stack>
+
+                  {/* Categories */}
+                  {book.categories?.length > 0 && (
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      {book.categories.map((c) => (
+                        <Chip
+                          key={c.category_id}
+                          label={c.category_name}
+                          size="small"
+                          variant="outlined"
+                        />
+                      ))}
+                    </Stack>
+                  )}
+
+                  <Divider />
+
+                  {/* Description */}
+                  {book.features && (
+                    <Typography
+                      variant="body1"
+                      color="text.secondary"
+                      sx={{ lineHeight: 1.8, whiteSpace: 'pre-line' }}
+                    >
+                      {book.features.split('---')[0]}
+                    </Typography>
+                  )}
+
+                  <Divider />
+
+                  {/* Details */}
+                  <Stack spacing={1.2}>
+                    {year && (
+                      <Stack direction="row" spacing={1}>
+                        <CalendarOutlined />
+                        <Typography>Published: {year}</Typography>
+                      </Stack>
+                    )}
+                    {pages && (
+                      <Stack direction="row" spacing={1}>
+                        <BookOutlined />
+                        <Typography>Pages: {pages}</Typography>
+                      </Stack>
+                    )}
+                    {isbn && (
+                      <Stack direction="row" spacing={1}>
+                        <FileTextOutlined />
+                        <Typography>ISBN: {isbn}</Typography>
+                      </Stack>
+                    )}
+                  </Stack>
+                </Stack>
+              </MainCard>
+
+              {/* ACTIONS (FIXED & CONSISTENT) */}
               <MainCard
-                contentSX={{ p: 2 }}
-                sx={{ bgcolor: 'grey.50', border: 'none' }}
+                sx={{
+                  bgcolor: 'primary.lighter',
+                  border: 'none'
+                }}
               >
-                <Typography variant="h6" gutterBottom>
-                  Add to Library
+                <Typography variant="h5" gutterBottom>
+                  Add to your library
                 </Typography>
 
-                <Stack spacing={1.5}>
+                <Stack spacing={2}>
                   <AnimateButton>
                     <Button
                       fullWidth
                       variant="contained"
                       color="warning"
                       startIcon={<HeartOutlined />}
-                      onClick={() => handleAddToLibrary('wishlist')}
                       disabled={addingToLibrary}
+                      onClick={() => handleAddToLibrary('wishlist')}
                     >
                       Want to Read
                     </Button>
@@ -208,10 +240,10 @@ function BookDetail() {
                       variant="contained"
                       color="info"
                       startIcon={<ClockCircleOutlined />}
-                      onClick={() => handleAddToLibrary('reading')}
                       disabled={addingToLibrary}
+                      onClick={() => handleAddToLibrary('reading')}
                     >
-                      Reading
+                      Currently Reading
                     </Button>
                   </AnimateButton>
 
@@ -221,128 +253,41 @@ function BookDetail() {
                       variant="contained"
                       color="success"
                       startIcon={<CheckCircleOutlined />}
-                      onClick={() => handleAddToLibrary('completed')}
                       disabled={addingToLibrary}
+                      onClick={() => handleAddToLibrary('completed')}
                     >
-                      Completed
+                      Mark as Read
                     </Button>
                   </AnimateButton>
                 </Stack>
               </MainCard>
             </Stack>
           </Grid>
-
-          {/* RIGHT: Info */}
-          <Grid item xs={12} md={8}>
-            <Stack spacing={3}>
-              {/* Title */}
-              <Box>
-                <Typography variant="h2">{book.title}</Typography>
-                <Typography variant="h5" color="text.secondary">
-                  {authorText}
-                </Typography>
-              </Box>
-
-              {/* Rating */}
-              <MainCard
-                contentSX={{ p: 2 }}
-                sx={{
-                  bgcolor: (theme) => theme.palette.primary.lighter,
-                  border: 'none'
-                }}
-              >
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <Rating value={avgRating} precision={0.1} readOnly />
-                  <Typography variant="h4" color="primary">
-                    {avgRating.toFixed(1)}
-                  </Typography>
-                  <Chip
-                    label={`${reviewsCount} ratings`}
-                    color="primary"
-                    size="small"
-                  />
-                </Stack>
-              </MainCard>
-
-              {/* Description */}
-              {book.features && (
-                <Box>
-                  <Typography variant="h5" gutterBottom>
-                    About this book
-                  </Typography>
-                  <Typography
-                    variant="body1"
-                    color="text.secondary"
-                    sx={{ lineHeight: 1.8 }}
-                  >
-                    {book.features.split('---').slice(0, 3).join('\n')}
-                  </Typography>
-                </Box>
-              )}
-
-              {/* Meta */}
-              <MainCard contentSX={{ p: 2 }} sx={{ bgcolor: 'grey.50' }}>
-                <Grid container spacing={2}>
-                  {publishedYear && (
-                    <MetaItem icon={<CalendarOutlined />} label="Published" value={publishedYear} />
-                  )}
-                  {pages && (
-                    <MetaItem icon={<BookOutlined />} label="Pages" value={pages} />
-                  )}
-                  {isbn && (
-                    <MetaItem icon={<FileTextOutlined />} label="ISBN" value={isbn} />
-                  )}
-                </Grid>
-              </MainCard>
-            </Stack>
-          </Grid>
         </Grid>
-      </MainCard>
-    </Grid>
+      </Grid>
 
-    {/* Reviews */}
-    <Grid item xs={12}>
-      <MainCard>
-        <Stack spacing={3}>
-          <Box>
-            <Typography variant="h4">Reader Reviews</Typography>
-            <Typography variant="body2" color="text.secondary">
-              What readers think about this book
-            </Typography>
-          </Box>
+      {/* REVIEWS */}
+      <Grid item xs={12}>
+        <MainCard>
+          <Typography variant="h4" gutterBottom>
+            Reader Reviews
+          </Typography>
+          <Divider sx={{ mb: 3 }} />
 
           {reviewsLoading ? (
-            <Box sx={{ textAlign: 'center', py: 4 }}>
+            <Box sx={{ py: 4, textAlign: 'center' }}>
               <CircularProgress />
             </Box>
           ) : (
             <ReviewList
               reviews={reviews}
-              onSubmit={handleSubmitReview}
-              onUpdate={handleUpdateReview}
-              onDelete={handleDeleteReview}
+              onSubmit={(data) => addReview(id, data)}
+              onUpdate={(rid, data) => updateReview(id, rid, data)}
+              onDelete={(rid) => deleteReview(id, rid)}
             />
           )}
-        </Stack>
-      </MainCard>
-    </Grid>
-  </Grid>
-);
-
-}
-
-export default BookDetail;
-
-function MetaItem({ icon, label, value }) {
-  return (
-    <Grid item xs={12} sm={6}>
-      <Stack direction="row" spacing={1} alignItems="center">
-        {icon}
-        <Typography variant="body2" color="text.secondary">
-          {label}:
-        </Typography>
-        <Typography variant="body1">{value}</Typography>
-      </Stack>
+        </MainCard>
+      </Grid>
     </Grid>
   );
 }

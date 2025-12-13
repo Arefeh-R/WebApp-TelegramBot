@@ -93,13 +93,26 @@ export function useGetUserLibrary(params = {}) {
   });
 
   const memoizedValue = useMemo(
-    () => ({
-      library: data?.results || [],
-      libraryLoading: isLoading,
-      libraryError: error,
-      libraryValidating: isValidating,
-      libraryEmpty: !isLoading && !data?.results?.length
-    }),
+    () => {
+      // Handle both array response and paginated response
+      let libraryData = [];
+      
+      if (Array.isArray(data)) {
+        // Backend returns array directly: [...]
+        libraryData = data;
+      } else if (data?.results) {
+        // Backend returns paginated: { results: [...], count: N }
+        libraryData = data.results;
+      }
+
+      return {
+        library: libraryData,
+        libraryLoading: isLoading,
+        libraryError: error,
+        libraryValidating: isValidating,
+        libraryEmpty: !isLoading && libraryData.length === 0
+      };
+    },
     [data, error, isLoading, isValidating]
   );
 
@@ -115,21 +128,28 @@ export async function addBookToLibrary(bookId, status) {
     
     // Update the library list cache
     mutate(
-      '/user-books/',
+      (key) => typeof key === 'string' && key.startsWith('/user-books/'),
       (currentData) => {
         if (!currentData) return currentData;
+        
+        // Handle array response
+        if (Array.isArray(currentData)) {
+          return [newItem, ...currentData];
+        }
+        
+        // Handle paginated response
         return {
           ...currentData,
           results: [newItem, ...(currentData.results || [])]
         };
       },
-      false
+      { revalidate: false }
     );
     
     return { success: true, data: newItem };
   } catch (error) {
     console.error('Error adding to library:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Failed to add book' };
   }
 }
 
@@ -140,9 +160,18 @@ export async function updateReadingStatus(id, status) {
     
     // Update cache
     mutate(
-      '/user-books/',
+      (key) => typeof key === 'string' && key.startsWith('/user-books/'),
       (currentData) => {
         if (!currentData) return currentData;
+        
+        // Handle array response
+        if (Array.isArray(currentData)) {
+          return currentData.map((item) =>
+            item.id === id ? { ...item, status } : item
+          );
+        }
+        
+        // Handle paginated response
         return {
           ...currentData,
           results: currentData.results.map((item) =>
@@ -150,13 +179,13 @@ export async function updateReadingStatus(id, status) {
           )
         };
       },
-      false
+      { revalidate: false }
     );
     
     return { success: true, data: updatedItem };
   } catch (error) {
     console.error('Error updating status:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Failed to update status' };
   }
 }
 
@@ -167,21 +196,28 @@ export async function removeFromLibrary(id) {
     
     // Update cache
     mutate(
-      '/user-books/',
+      (key) => typeof key === 'string' && key.startsWith('/user-books/'),
       (currentData) => {
         if (!currentData) return currentData;
+        
+        // Handle array response
+        if (Array.isArray(currentData)) {
+          return currentData.filter((item) => item.id !== id);
+        }
+        
+        // Handle paginated response
         return {
           ...currentData,
           results: currentData.results.filter((item) => item.id !== id)
         };
       },
-      false
+      { revalidate: false }
     );
     
     return { success: true };
   } catch (error) {
     console.error('Error removing from library:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Failed to remove book' };
   }
 }
 
@@ -194,12 +230,12 @@ export async function filterBooks(filters) {
     mutate(
       '/books/',
       () => filteredBooks,
-      false
+      { revalidate: false }
     );
     
     return { success: true, data: filteredBooks };
   } catch (error) {
     console.error('Error filtering books:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Failed to filter books' };
   }
 }

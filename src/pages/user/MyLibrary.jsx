@@ -1,41 +1,83 @@
-// src/pages/books/MyLibrary.jsx
-import { useState } from 'react';
-import { 
-  Box, 
-  Tabs, 
-  Tab, 
-  Grid, 
-  Typography, 
+import { useState, useEffect } from 'react';
+import {
+  Box,
+  Tabs,
+  Tab,
+  Grid,
+  Typography,
   CircularProgress,
+  FormControl,
+  Select,
+  MenuItem,
+  IconButton,
   Stack,
-  Chip
+  Chip,
+  Button
 } from '@mui/material';
-import { updateReadingStatus, removeFromLibrary, useGetUserLibrary} from 'hooks/useBooks';
-import BookCard from 'components/books/BookCard';
+import { DeleteOutlined, EyeOutlined, BookOutlined, ClockCircleOutlined, CheckCircleOutlined, HeartOutlined } from '@ant-design/icons';
 
-// project import
+// project imports
 import MainCard from 'components/MainCard';
+import { useGetUserLibrary, updateReadingStatus, removeFromLibrary } from 'hooks/useBooks';
+import BookCard from 'components/books/BookCard';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-// assets
-import { BookOutlined, ClockCircleOutlined, CheckCircleOutlined, HeartOutlined } from '@ant-design/icons';
+function TabPanel({ children, value, index }) {
+  return (
+    <div role="tabpanel" hidden={value !== index}>
+      {value === index && <Box sx={{ pt: 3 }}>{children}</Box>}
+    </div>
+  );
+}
 
 function MyLibrary() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tab, setTab] = useState(0);
-  
-  const statuses = ['all', 'wishlist', 'reading', 'Completed'];
-  const currentStatus = statuses[tab];
-  
-  const params = currentStatus === 'all' ? {} : { status: currentStatus };
-  const { library, libraryLoading, libraryEmpty } = useGetUserLibrary(params);
+  const navigate = useNavigate();
 
-  const handleChangeStatus = async (itemId, newStatus) => {
+  // Backend status values: 'wishlist', 'reading', 'Completed'
+  const statuses = ['all', 'wishlist', 'reading', 'Completed'];
+  const statusLabels = {
+    wishlist: 'Want to Read',
+    reading: 'Currently Reading',
+    Completed: 'Read'
+  };
+
+  // Initialize tab from URL parameter
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    if (statusParam) {
+      const index = statuses.indexOf(statusParam);
+      if (index !== -1) {
+        setTab(index);
+      }
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (event, newValue) => {
+    setTab(newValue);
+    // Update URL when tab changes
+    if (newValue === 0) {
+      setSearchParams({});
+    } else {
+      setSearchParams({ status: statuses[newValue] });
+    }
+  };
+
+  const currentStatus = statuses[tab];
+  const params = currentStatus === 'all' ? {} : { status: currentStatus };
+  const { library = [], libraryLoading, libraryEmpty } = useGetUserLibrary(params);
+
+  const handleChangeStatus = async (itemId, newStatus, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     const result = await updateReadingStatus(itemId, newStatus);
     if (!result.success) {
       alert('Failed to update status: ' + result.error);
     }
   };
 
-  const handleRemove = async (itemId) => {
+  const handleRemove = async (itemId, e) => {
+    if (e && e.stopPropagation) e.stopPropagation();
     if (window.confirm('Remove this book from your library?')) {
       const result = await removeFromLibrary(itemId);
       if (!result.success) {
@@ -44,178 +86,243 @@ function MyLibrary() {
     }
   };
 
-  // Get stats for each category
-  const getStats = () => {
-    if (!library || library.length === 0) return { all: 0, want: 0, reading: 0, read: 0 };
-    
-    return {
-      all: library.length,
-      want: library.filter(item => item.status === 'wishlist').length,
-      reading: library.filter(item => item.status === 'reading').length,
-      read: library.filter(item => item.status === 'Completed').length
-    };
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Completed':
+        return 'success';
+      case 'reading':
+        return 'info';
+      case 'wishlist':
+        return 'warning';
+      default:
+        return 'default';
+    }
   };
 
-  const stats = getStats();
+  // Calculate stats from all library items
+  const { library: allLibrary = [] } = useGetUserLibrary({});
+  const stats = {
+    all: allLibrary.length,
+    wishlist: allLibrary.filter(item => item.status === 'wishlist').length,
+    reading: allLibrary.filter(item => item.status === 'reading').length,
+    completed: allLibrary.filter(item => item.status === 'Completed').length
+  };
 
   return (
-    <Box>
+    <Grid container rowSpacing={4.5} columnSpacing={2.75}>
       {/* Page Header */}
-      <MainCard>
+      <Grid item xs={12} sx={{ mb: -2.25 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
           <Box>
-            <Typography variant="h3" sx={{ mb: 1 }}>
-              My Library
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="h5">My Library</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
               Manage your reading collection
             </Typography>
           </Box>
-          <Chip 
-            label={`${library?.length || 0} Books`} 
-            color="primary" 
+          <Chip
+            label={`${stats.all} ${stats.all === 1 ? 'Book' : 'Books'}`}
+            color="primary"
             variant="outlined"
             size="medium"
           />
         </Stack>
-      </MainCard>
-
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mt: 0.5 }}>
-        <Grid item xs={6} sm={6} md={3}>
-          <MainCard contentSX={{ p: 2.25 }}>
-            <Stack spacing={0.5}>
-              <Typography variant="h6" color="text.secondary">
-                Total Books
-              </Typography>
-              <Grid container alignItems="center">
-                <Grid item>
-                  <Typography variant="h4" color="inherit">
-                    {stats.all}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Stack>
-          </MainCard>
-        </Grid>
-
-        <Grid item xs={6} sm={6} md={3}>
-          <MainCard contentSX={{ p: 2.25 }}>
-            <Stack spacing={0.5}>
-              <Typography variant="h6" color="text.secondary">
-                Want to Read
-              </Typography>
-              <Grid container alignItems="center">
-                <Grid item>
-                  <Typography variant="h4" color="warning.main">
-                    {stats.want}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Stack>
-          </MainCard>
-        </Grid>
-
-        <Grid item xs={6} sm={6} md={3}>
-          <MainCard contentSX={{ p: 2.25 }}>
-            <Stack spacing={0.5}>
-              <Typography variant="h6" color="text.secondary">
-                Currently Reading
-              </Typography>
-              <Grid container alignItems="center">
-                <Grid item>
-                  <Typography variant="h4" color="info.main">
-                    {stats.reading}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Stack>
-          </MainCard>
-        </Grid>
-
-        <Grid item xs={6} sm={6} md={3}>
-          <MainCard contentSX={{ p: 2.25 }}>
-            <Stack spacing={0.5}>
-              <Typography variant="h6" color="text.secondary">
-                Completed
-              </Typography>
-              <Grid container alignItems="center">
-                <Grid item>
-                  <Typography variant="h4" color="success.main">
-                    {stats.read}
-                  </Typography>
-                </Grid>
-              </Grid>
-            </Stack>
-          </MainCard>
-        </Grid>
       </Grid>
 
-      {/* Tabs and Content */}
-      <MainCard sx={{ mt: 3 }}>
-        <Tabs 
-          value={tab} 
-          onChange={(e, v) => setTab(v)} 
-          sx={{ 
-            mb: 3,
-            '& .MuiTabs-flexContainer': {
-              borderBottom: 1,
-              borderColor: 'divider'
-            }
-          }}
-        >
-          <Tab 
-            icon={<BookOutlined />} 
-            iconPosition="start" 
-            label="All Books" 
-          />
-          <Tab 
-            icon={<HeartOutlined />} 
-            iconPosition="start" 
-            label="Want to Read" 
-          />
-          <Tab 
-            icon={<ClockCircleOutlined />} 
-            iconPosition="start" 
-            label="Reading" 
-          />
-          <Tab 
-            icon={<CheckCircleOutlined />} 
-            iconPosition="start" 
-            label="Completed" 
-          />
-        </Tabs>
+      {/* Stats Cards */}
+      <Grid item xs={6} sm={6} md={3}>
+        <MainCard>
+          <Stack spacing={0.5}>
+            <Typography variant="h6" color="text.secondary">
+              Total Books
+            </Typography>
+            <Typography variant="h3" color="primary">
+              {stats.all}
+            </Typography>
+          </Stack>
+        </MainCard>
+      </Grid>
 
-        {libraryLoading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
-            <CircularProgress />
-          </Box>
-        ) : libraryEmpty ? (
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <BookOutlined style={{ fontSize: 64, color: '#bbb', marginBottom: 16 }} />
-            <Typography variant="h5" color="text.secondary" gutterBottom>
-              No books in this category
+      <Grid item xs={6} sm={6} md={3}>
+        <MainCard>
+          <Stack spacing={0.5}>
+            <Typography variant="h6" color="text.secondary">
+              Want to Read
             </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Start adding books to build your library
+            <Typography variant="h3" color="warning.main">
+              {stats.wishlist}
             </Typography>
+          </Stack>
+        </MainCard>
+      </Grid>
+
+      <Grid item xs={6} sm={6} md={3}>
+        <MainCard>
+          <Stack spacing={0.5}>
+            <Typography variant="h6" color="text.secondary">
+              Reading
+            </Typography>
+            <Typography variant="h3" color="info.main">
+              {stats.reading}
+            </Typography>
+          </Stack>
+        </MainCard>
+      </Grid>
+
+      <Grid item xs={6} sm={6} md={3}>
+        <MainCard>
+          <Stack spacing={0.5}>
+            <Typography variant="h6" color="text.secondary">
+              Completed
+            </Typography>
+            <Typography variant="h3" color="success.main">
+              {stats.completed}
+            </Typography>
+          </Stack>
+        </MainCard>
+      </Grid>
+
+      {/* Tabs Card */}
+      <Grid item xs={12}>
+        <MainCard content={false}>
+          <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+            <Tabs
+              value={tab}
+              onChange={handleTabChange}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                px: 3,
+                pt: 2,
+                '& .MuiTabs-indicator': {
+                  height: 3
+                }
+              }}
+            >
+              <Tab icon={<BookOutlined />} iconPosition="start" label="All Books" />
+              <Tab icon={<HeartOutlined />} iconPosition="start" label="Want to Read" />
+              <Tab icon={<ClockCircleOutlined />} iconPosition="start" label="Reading" />
+              <Tab icon={<CheckCircleOutlined />} iconPosition="start" label="Completed" />
+            </Tabs>
           </Box>
-        ) : (
-          <Grid container spacing={3}>
-            {library.map((item) => (
-              <Grid item xs={6} sm={4} md={3} lg={2.4} key={item.id}>
-                <BookCard 
-                  book={item.book}
-                  libraryItem={item}
-                  onChangeStatus={handleChangeStatus}
-                  onRemove={handleRemove}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        )}
-      </MainCard>
-    </Box>
+
+          {/* Tab Content */}
+          <Box sx={{ p: 2.5 }}>
+            <TabPanel value={tab} index={tab}>
+              {libraryLoading ? (
+                <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+                  <CircularProgress />
+                </Box>
+              ) : libraryEmpty ? (
+                <Box sx={{ textAlign: 'center', py: 8 }}>
+                  <BookOutlined style={{ fontSize: 80, color: '#bbb', marginBottom: 16 }} />
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    No books in this category
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    Start building your library by adding books
+                  </Typography>
+                  <Button variant="contained" onClick={() => navigate('/books')}>
+                    Browse Books
+                  </Button>
+                </Box>
+              ) : (
+                <Grid container spacing={3}>
+                  {library.map((item) => (
+                    <Grid item xs={12} sm={6} md={4} lg={3} xl={2.4} key={item.id}>
+                      <MainCard
+                        boxShadow
+                        shadow={(theme) => theme.customShadows.z1}
+                        sx={{
+                          height: '100%',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                          '&:hover': {
+                            transform: 'translateY(-8px)',
+                            boxShadow: (theme) => theme.customShadows.z8
+                          }
+                        }}
+                      >
+                        {/* Book Card */}
+                        <Box sx={{ flexGrow: 1, mb: 2 }}>
+                          <BookCard book={item.book} />
+                        </Box>
+
+                        {/* Status Badge */}
+                        <Box sx={{ mb: 2 }}>
+                          <Chip
+                            label={statusLabels[item.status] || item.status}
+                            color={getStatusColor(item.status)}
+                            size="small"
+                            sx={{
+                              width: '100%',
+                              fontWeight: 500,
+                              fontSize: '0.75rem'
+                            }}
+                          />
+                        </Box>
+
+                        {/* Action Controls */}
+                        <Stack spacing={1.5}>
+                          <FormControl fullWidth size="small">
+                            <Select
+                              value={item.status || 'wishlist'}
+                              onChange={(e) => handleChangeStatus(item.id, e.target.value, e)}
+                              onClick={(e) => e.stopPropagation()}
+                              displayEmpty
+                              sx={{
+                                '& .MuiOutlinedInput-notchedOutline': {
+                                  borderColor: 'divider'
+                                }
+                              }}
+                            >
+                              <MenuItem value="wishlist">Want to Read</MenuItem>
+                              <MenuItem value="reading">Currently Reading</MenuItem>
+                              <MenuItem value="Completed">Read</MenuItem>
+                            </Select>
+                          </FormControl>
+
+                          <Stack direction="row" spacing={1}>
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              fullWidth
+                              startIcon={<EyeOutlined />}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(`/books/${item.book.parent_asin || item.book.id}`);
+                              }}
+                            >
+                              View
+                            </Button>
+                            <IconButton
+                              color="error"
+                              size="small"
+                              onClick={(e) => handleRemove(item.id, e)}
+                              sx={{
+                                border: 1,
+                                borderColor: 'error.main',
+                                borderRadius: 1,
+                                '&:hover': {
+                                  backgroundColor: 'error.lighter',
+                                  borderColor: 'error.dark'
+                                }
+                              }}
+                            >
+                              <DeleteOutlined />
+                            </IconButton>
+                          </Stack>
+                        </Stack>
+                      </MainCard>
+                    </Grid>
+                  ))}
+                </Grid>
+              )}
+            </TabPanel>
+          </Box>
+        </MainCard>
+      </Grid>
+    </Grid>
   );
 }
 
