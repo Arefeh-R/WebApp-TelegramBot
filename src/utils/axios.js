@@ -23,6 +23,12 @@ axiosServices.interceptors.request.use(
   }
 );
 
+let onAuthLogout = null;
+
+export const setAuthLogout = (fn) => {
+  onAuthLogout = fn;
+};
+
 // ==============================|| AXIOS - RESPONSE INTERCEPTOR ||============================== //
 
 axiosServices.interceptors.response.use(
@@ -31,7 +37,15 @@ axiosServices.interceptors.response.use(
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !window.location.href.includes('/login')) {
       localStorage.removeItem('authToken');
-      window.location.pathname = '/login';
+      if (typeof onAuthLogout === 'function') {
+        try {
+          onAuthLogout();
+        } catch (e) {
+          console.error('onAuthLogout handler error:', e);
+        }
+      } else {
+        window.location.pathname = '/login';
+      }
     }
     
     // Handle 500 Server Error

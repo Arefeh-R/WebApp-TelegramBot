@@ -13,7 +13,7 @@ const GuestGuard = ({ children }) => {
 
   useEffect(() => {
     if (isInitialized && isLoggedIn) {
-      navigate('/dashboard', { replace: true });
+      navigate('/dashboard/default', { replace: true });
     }
   }, [isInitialized, isLoggedIn, navigate]);
 

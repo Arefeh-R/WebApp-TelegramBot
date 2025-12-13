@@ -1,36 +1,60 @@
 // material-ui
-import Button from '@mui/material/Button';
-import CardMedia from '@mui/material/CardMedia';
-import Link from '@mui/material/Link';
-import Stack from '@mui/material/Stack';
-import Typography from '@mui/material/Typography';
+import { Stack, Typography, Divider, CircularProgress } from '@mui/material';
 
-// project import
+// project imports
 import MainCard from 'components/MainCard';
+import { useLibraryStats } from 'hooks/useLibraryStats';
 
-// assets
-import avatar from 'assets/images/users/avatar-group.png';
-import AnimateButton from 'components/@extended/AnimateButton';
-
-// ==============================|| DRAWER CONTENT - NAVIGATION CARD ||============================== //
+// icons
+import {
+  BookOutlined,
+  HeartOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined
+} from '@ant-design/icons';
 
 export default function NavCard() {
+  const { stats, loading } = useLibraryStats();
+
   return (
     <MainCard sx={{ bgcolor: 'grey.50', m: 3 }}>
-      <Stack alignItems="center" spacing={2.5}>
-        <CardMedia component="img" image={avatar} sx={{ width: 112 }} />
-        <Stack alignItems="center">
-          <Typography variant="h5">Mantis Pro</Typography>
-          <Typography variant="h6" color="secondary">
-            Checkout pro features
-          </Typography>
-        </Stack>
-        <AnimateButton>
-          <Button component={Link} target="_blank" href="https://mantisdashboard.com" variant="contained" color="success" size="small">
-            Pro
-          </Button>
-        </AnimateButton>
+      <Stack spacing={2}>
+        <Typography variant="h5">
+          My Library
+        </Typography>
+
+        <Typography variant="body2" color="text.secondary">
+          Your reading progress
+        </Typography>
+
+        <Divider />
+
+        {loading ? (
+          <Stack alignItems="center" py={2}>
+            <CircularProgress size={24} />
+          </Stack>
+        ) : (
+          <Stack spacing={1.5}>
+            <StatRow icon={<BookOutlined />} label="Total" value={stats.total} />
+            <StatRow icon={<HeartOutlined />} label="Want to Read" value={stats.want} />
+            <StatRow icon={<ClockCircleOutlined />} label="Reading" value={stats.reading} />
+            <StatRow icon={<CheckCircleOutlined />} label="Completed" value={stats.read} />
+          </Stack>
+        )}
       </Stack>
     </MainCard>
+  );
+}
+
+// small helper component
+function StatRow({ icon, label, value }) {
+  return (
+    <Stack direction="row" alignItems="center" justifyContent="space-between">
+      <Stack direction="row" spacing={1} alignItems="center">
+        {icon}
+        <Typography variant="body2">{label}</Typography>
+      </Stack>
+      <Typography variant="subtitle2">{value}</Typography>
+    </Stack>
   );
 }

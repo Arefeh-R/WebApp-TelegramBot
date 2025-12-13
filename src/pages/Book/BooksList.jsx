@@ -1,8 +1,13 @@
-// src/pages/BooksList.jsx
 import { useState } from 'react';
-import { Box, CircularProgress, Typography, Alert } from '@mui/material';
+import { Box, CircularProgress, Typography, Alert, Stack, Grid } from '@mui/material';
 import { useGetBooks } from 'hooks/useBooks';
 import BookList from 'components/books/BookList';
+
+// project import
+import MainCard from 'components/MainCard';
+
+// assets
+import { BookOutlined } from '@ant-design/icons';
 
 function BooksList() {
   const [page, setPage] = useState(1);
@@ -17,42 +22,76 @@ function BooksList() {
 
   const handlePageChange = (event, value) => {
     setPage(value);
+    // Scroll to top when page changes
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (booksLoading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
-        <CircularProgress />
-      </Box>
+      <Grid container rowSpacing={4.5} columnSpacing={2.75}>
+        <Grid item xs={12}>
+          <MainCard>
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+              <Stack spacing={2} alignItems="center">
+                <CircularProgress size={60} />
+                <Typography variant="body1" color="text.secondary">
+                  Loading books...
+                </Typography>
+              </Stack>
+            </Box>
+          </MainCard>
+        </Grid>
+      </Grid>
     );
   }
 
   if (booksError) {
     return (
-      <Alert severity="error" sx={{ mt: 2 }}>
-        Error loading books: {booksError}
-      </Alert>
+      <Grid container rowSpacing={4.5} columnSpacing={2.75}>
+        <Grid item xs={12}>
+          <MainCard>
+            <Alert severity="error">
+              <Typography variant="h6">Error loading books</Typography>
+              <Typography variant="body2">{booksError}</Typography>
+            </Alert>
+          </MainCard>
+        </Grid>
+      </Grid>
     );
   }
 
   if (booksEmpty) {
     return (
-      <Typography variant="h6" sx={{ textAlign: 'center', mt: 4 }}>
-        No books found
-      </Typography>
+      <Grid container rowSpacing={4.5} columnSpacing={2.75}>
+        <Grid item xs={12}>
+          <MainCard>
+            <Box sx={{ textAlign: 'center', py: 8 }}>
+              <BookOutlined style={{ fontSize: 80, color: '#bbb', marginBottom: 16 }} />
+              <Typography variant="h4" color="text.secondary" gutterBottom>
+                No books found
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Try adjusting your search or filters
+              </Typography>
+            </Box>
+          </MainCard>
+        </Grid>
+      </Grid>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <BookList
-        books={books}
-        title="Browse Books"
-        page={page}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-      />
-    </Box>
+    <Grid container rowSpacing={4.5} columnSpacing={2.75}>
+      <Grid item xs={12}>
+        <BookList
+          books={books}
+          title="Browse Books"
+          page={page}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+      </Grid>
+    </Grid>
   );
 }
 

@@ -92,7 +92,7 @@ export const userLibraryAPI = {
   // Add book to library
   addToLibrary: async (bookId, status = 'wishlist') => {
     const response = await axiosServices.post(endpoints.userBooks.add, {
-      book: bookId,
+      book_id: bookId,
       status
     });
     return response.data;

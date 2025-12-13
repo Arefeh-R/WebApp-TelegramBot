@@ -2,7 +2,7 @@ import { createContext, useEffect, useReducer } from 'react';
 import PropTypes from 'prop-types';
 
 // project import
-import axiosServices from 'utils/axios';
+import axiosServices, { setAuthLogout } from 'utils/axios';
 
 // ==============================|| JWT CONTEXT & PROVIDER ||============================== //
 
@@ -141,8 +141,9 @@ export const JWTProvider = ({ children }) => {
     try {
       // Register at backend /users/register/
       await axiosServices.post('/users/register/', {
-        email,
+        username: email,
         password,
+        password2: password, // <-- include password2 to satisfy serializer validation
         first_name: firstName,
         last_name: lastName
       });
@@ -170,7 +171,8 @@ export const JWTProvider = ({ children }) => {
 
       return { success: true };
     } catch (error) {
-      console.error('Register error:', error);
+      // Log response body so you can inspect serializer validation messages
+      console.error('Register error:', error.response?.data || error.message);
       return {
         success: false,
         error: error.response?.data || error.message || 'Registration failed'
@@ -190,6 +192,9 @@ export const JWTProvider = ({ children }) => {
       dispatch({ type: 'LOGOUT' });
     }
   };
+
+  // Register logout handler so axios can trigger context logout on 401
+  setAuthLogout(logout);
 
   return (
     <JWTContext.Provider

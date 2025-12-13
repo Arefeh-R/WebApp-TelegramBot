@@ -33,7 +33,7 @@ import EyeInvisibleOutlined from '@ant-design/icons/EyeInvisibleOutlined';
 const AuthRegister = () => {
   const [level, setLevel] = useState();
   const [showPassword, setShowPassword] = useState(false);
-  const { register } = useAuth(); // ADD THIS
+  const { register } = useAuth(); 
 
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
@@ -70,7 +70,6 @@ const AuthRegister = () => {
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
           try {
-            // REPLACE the existing onSubmit code with this:
             const result = await register(
               values.email,
               values.password,

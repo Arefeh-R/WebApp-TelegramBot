@@ -3,6 +3,14 @@ import { lazy } from 'react';
 // project imports
 import Loadable from 'components/Loadable';
 import DashboardLayout from 'layout/Dashboard';
+import AuthGuard from 'utils/route-guard/AuthGuard'; 
+
+//render books pages
+const BooksListPage = Loadable(lazy(() => import('pages/Book/BooksList')));
+const BookDetailPage = Loadable(lazy(() => import('pages/Book/BookDetails')));
+
+//render user pages
+const MyLibraryPage = Loadable(lazy(() => import('pages/user/MyLibrary')));
 
 // render- Dashboard
 const DashboardDefault = Loadable(lazy(() => import('pages/dashboard/default')));
@@ -31,7 +39,24 @@ const MainRoutes = {
         {
           path: 'default',
           element: <DashboardDefault />
+        },
+        {
+          path: 'library',
+          element: (
+            <AuthGuard>
+              <MyLibraryPage />
+            </AuthGuard>
+          )
+        },
+        {
+          path: 'books',
+          element: <BooksListPage />
+        },
+        {
+          path: 'books/:id',
+          element: <BookDetailPage />
         }
+        
       ]
     },
     {

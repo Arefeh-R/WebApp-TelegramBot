@@ -1,8 +1,8 @@
 // src/pages/Home.jsx
 import { useState, useEffect } from 'react';
 import { Container, Typography, Box, CircularProgress } from '@mui/material';
-import BookList from '../components/books/BookList';
-import { booksAPI } from '../api/books';
+import BookList from '../../components/books/BookList';
+import { booksAPI } from '../../api/books';
 
 const Home = () => {
   const [featuredBooks, setFeaturedBooks] = useState([]);
