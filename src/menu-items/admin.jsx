@@ -12,28 +12,28 @@ const admin = {
   children: [
     {
       id: 'admin-dashboard',
-      title: 'Dashboard',
+      title: 'داشبورد',
       type: 'item',
       url: '/admin/dashboard',
       icon: DashboardOutlined
     },
     {
       id: 'admin-pending-groups',
-      title: 'Pending Groups',
+      title: 'گروه های در انتظار تایید',
       type: 'item',
       url: '/admin/groups/pending',
       icon: CheckCircleOutlined
     },
     {
       id: 'admin-manage-groups',
-      title: 'Manage Groups',
+      title: 'مدیریت گروه ها',
       type: 'item',
       url: '/admin/groups/manage',
       icon: TeamOutlined
     },
     {
       id: 'admin-manage-categories',
-      title: 'Manage Categories',
+      title: 'مدیریت دسته‌بندی‌ها',
       type: 'item',
       url: '/admin/categories',
       icon: AppstoreOutlined

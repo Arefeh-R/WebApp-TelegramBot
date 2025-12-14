@@ -51,7 +51,7 @@ const GroupEditDialog = ({ group, open, onClose, onSuccess, onError }) => {
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      onError('Group name is required');
+      onError('نام گروه الزامی است');
       return;
     }
 
@@ -68,21 +68,21 @@ const GroupEditDialog = ({ group, open, onClose, onSuccess, onError }) => {
       }
 
       await updateGroup(group.id, updateData);
-      onSuccess(`Group "${formData.name}" updated successfully`);
+      onSuccess(`گروه "${formData.name}" با موفقیت به‌روزرسانی شد`);
     } catch (error) {
-      onError(error.response?.data?.detail || 'Failed to update group');
+      onError(error.response?.data?.detail || 'به‌روزرسانی گروه با شکست مواجه شد');
     }
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Edit Group: {group?.name}</DialogTitle>
+      <DialogTitle>ویرایش گروه: {group?.name}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             required
             fullWidth
-            label="Group Name"
+            label="نام گروه"
             name="name"
             value={formData.name}
             onChange={handleChange}
@@ -92,7 +92,7 @@ const GroupEditDialog = ({ group, open, onClose, onSuccess, onError }) => {
             fullWidth
             multiline
             rows={3}
-            label="Description"
+            label="توضیحات"
             name="description"
             value={formData.description}
             onChange={handleChange}
@@ -100,7 +100,7 @@ const GroupEditDialog = ({ group, open, onClose, onSuccess, onError }) => {
 
           <TextField
             fullWidth
-            label="Telegram Invite Link"
+            label="لینک دعوت تلگرام"
             name="telegram_invite_link"
             value={formData.telegram_invite_link}
             onChange={handleChange}
@@ -108,15 +108,15 @@ const GroupEditDialog = ({ group, open, onClose, onSuccess, onError }) => {
           />
 
           <FormControl fullWidth>
-            <InputLabel>Category</InputLabel>
+            <InputLabel>دسته‌بندی</InputLabel>
             <Select
               name="category_id"
               value={formData.category_id}
               onChange={handleChange}
-              label="Category"
+              label="دسته‌بندی"
             >
               <MenuItem value="">
-                <em>None</em>
+                <em>هیچکدام</em>
               </MenuItem>
               {categories.map((cat) => (
                 <MenuItem key={cat.id} value={cat.id}>
@@ -134,18 +134,18 @@ const GroupEditDialog = ({ group, open, onClose, onSuccess, onError }) => {
                 onChange={handleChange}
               />
             }
-            label="Approved"
+            label="تأیید شده"
           />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>لغو</Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           disabled={isLoading}
         >
-          {isLoading ? 'Saving...' : 'Save Changes'}
+          {isLoading ? 'در حال ذخیره...' : 'ذخیره تغییرات'}
         </Button>
       </DialogActions>
     </Dialog>

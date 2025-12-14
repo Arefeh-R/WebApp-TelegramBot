@@ -4,6 +4,7 @@ import { Stack, Typography, Divider, CircularProgress } from '@mui/material';
 // project imports
 import MainCard from 'components/MainCard';
 import { useLibraryStats } from 'hooks/useLibraryStats';
+import useAuth from 'hooks/useAuth';
 
 // icons
 import {
@@ -14,7 +15,13 @@ import {
 } from '@ant-design/icons';
 
 export default function NavCard() {
+  const { isLoggedIn } = useAuth();
   const { stats, loading } = useLibraryStats();
+  
+  // Don't render if user is not logged in
+  if (!isLoggedIn) {
+    return null;
+  }
 
   return (
     <MainCard sx={{ bgcolor: 'grey.50', m: 3 }}>

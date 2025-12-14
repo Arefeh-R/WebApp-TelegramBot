@@ -17,9 +17,9 @@ export default function Register() {
       <Grid container spacing={3}>
         <Grid size={12}>
           <Stack direction="row" sx={{ alignItems: 'baseline', justifyContent: 'space-between', mb: { xs: -0.5, sm: 0.5 } }}>
-            <Typography variant="h3">Sign up</Typography>
+            <Typography variant="h3">ثبت‌نام</Typography>
             <Typography component={Link} to="/login" variant="body1" sx={{ textDecoration: 'none' }} color="primary">
-              Already have an account?
+              قبلاً ثبت‌نام کرده‌اید؟
             </Typography>
           </Stack>
         </Grid>

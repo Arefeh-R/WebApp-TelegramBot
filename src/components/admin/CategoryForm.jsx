@@ -46,60 +46,60 @@ const CategoryForm = ({ open, category, onClose, onSuccess, onError }) => {
 
   const handleSubmit = async () => {
     if (!formData.name.trim()) {
-      onError('Category name is required');
+      onError('نام دسته‌بندی الزامی است');
       return;
     }
 
     try {
       if (isEdit) {
         await updateCategory(category.id, formData);
-        onSuccess(`Category "${formData.name}" updated successfully`);
+        onSuccess(`دسته‌بندی "${formData.name}" با موفقیت به‌روزرسانی شد`);
       } else {
         await createCategory(formData);
-        onSuccess(`Category "${formData.name}" created successfully`);
+        onSuccess(`دسته‌بندی "${formData.name}" با موفقیت ایجاد شد`);
       }
     } catch (error) {
-      onError(error.response?.data?.detail || `Failed to ${isEdit ? 'update' : 'create'} category`);
+      onError(error.response?.data?.detail || `${isEdit ? 'به‌روزرسانی' : 'ایجاد'} دسته‌بندی با شکست مواجه شد`);
     }
   };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>
-        {isEdit ? `Edit Category: ${category?.name}` : 'Create New Category'}
+        {isEdit ? `ویرایش دسته‌بندی: ${category?.name}` : 'ایجاد دسته‌بندی جدید'}
       </DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             required
             fullWidth
-            label="Category Name"
+            label="نام دسته‌بندی"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="e.g., Science Fiction, History, Technology"
+            placeholder="مثال: علمی-تخیلی، تاریخ، فناوری"
           />
 
           <TextField
             fullWidth
             multiline
             rows={3}
-            label="Description"
+            label="توضیحات"
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="Describe this category..."
+            placeholder="این دسته‌بندی را توضیح دهید..."
           />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
+        <Button onClick={onClose}>لغو</Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
           disabled={isLoading}
         >
-          {isLoading ? 'Saving...' : isEdit ? 'Update' : 'Create'}
+          {isLoading ? 'در حال ذخیره...' : isEdit ? 'به‌روزرسانی' : 'ایجاد'}
         </Button>
       </DialogActions>
     </Dialog>

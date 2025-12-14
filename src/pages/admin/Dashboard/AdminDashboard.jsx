@@ -51,25 +51,25 @@ const AdminDashboard = () => {
 
   const stats = [
     {
-      title: 'Total Groups',
+      title: 'کل گروه‌ها',
       value: loadingGroups ? '...' : allGroups.length,
       icon: <TeamOutlined />,
       color: 'primary'
     },
     {
-      title: 'Approved Groups',
+      title: 'گروه‌های تأیید شده',
       value: loadingGroups ? '...' : approvedGroups.length,
       icon: <CheckCircleOutlined />,
       color: 'success'
     },
     {
-      title: 'Pending Approval',
+      title: 'در انتظار تأیید',
       value: loadingPending ? '...' : pendingGroups.length,
       icon: <ClockCircleOutlined />,
       color: 'warning'
     },
     {
-      title: 'Categories',
+      title: 'دسته‌بندی‌ها',
       value: loadingCategories ? '...' : categories.length,
       icon: <AppstoreOutlined />,
       color: 'info'
@@ -77,7 +77,7 @@ const AdminDashboard = () => {
   ];
 
   return (
-    <MainCard title="Admin Dashboard">
+    <MainCard title="داشبورد مدیریت">
       <Grid container spacing={3}>
         {stats.map((stat, index) => (
           <Grid item xs={12} sm={6} md={3} key={index}>
@@ -90,14 +90,14 @@ const AdminDashboard = () => {
           <Card>
             <CardContent>
               <Typography variant="h5" gutterBottom>
-                Quick Stats
+                آمار سریع
               </Typography>
               <Stack spacing={1}>
                 <Typography variant="body1">
-                  Total Members: <strong>{totalMembers}</strong>
+                  کل اعضا: <strong>{totalMembers}</strong>
                 </Typography>
                 <Typography variant="body1">
-                  Average Members per Group: <strong>
+                  میانگین اعضا در هر گروه: <strong>
                     {allGroups.length > 0 ? Math.round(totalMembers / allGroups.length) : 0}
                   </strong>
                 </Typography>
@@ -112,7 +112,7 @@ const AdminDashboard = () => {
             <Card>
               <CardContent>
                 <Typography variant="h5" gutterBottom>
-                  Recent Pending Requests
+                  درخواست‌های اخیر در انتظار تأیید
                 </Typography>
                 <Stack spacing={1}>
                   {pendingGroups.slice(0, 5).map((group) => (
@@ -126,7 +126,7 @@ const AdminDashboard = () => {
                     >
                       <Typography variant="subtitle1">{group.name}</Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {group.description || 'No description'}
+                        {group.description || 'بدون توضیحات'}
                       </Typography>
                     </Box>
                   ))}

@@ -35,26 +35,26 @@ const GroupApprovalCard = ({ group, onSuccess, onError }) => {
 
   const handleApprove = async () => {
     if (!approvalData.telegram_invite_link) {
-      onError('Telegram invite link is required');
+      onError('لینک دعوت تلگرام الزامی است');
       return;
     }
 
     try {
       await approveGroup(group.id, approvalData);
-      onSuccess(`Group "${group.name}" approved successfully`);
+      onSuccess(`گروه "${group.name}" با موفقیت تأیید شد`);
       setShowApprovalDialog(false);
     } catch (error) {
-      onError(error.response?.data?.detail || 'Failed to approve group');
+      onError(error.response?.data?.detail || 'تأیید گروه با شکست مواجه شد');
     }
   };
 
   const handleReject = async () => {
     try {
       await rejectGroup(group.id);
-      onSuccess(`Group "${group.name}" rejected`);
+      onSuccess(`گروه "${group.name}" رد شد`);
       setShowRejectDialog(false);
     } catch (error) {
-      onError(error.response?.data?.detail || 'Failed to reject group');
+      onError(error.response?.data?.detail || 'رد گروه با شکست مواجه شد');
     }
   };
 
@@ -70,7 +70,7 @@ const GroupApprovalCard = ({ group, onSuccess, onError }) => {
               {group.requested_by && (
                 <Chip
                   icon={<UserOutlined />}
-                  label={`Requested by: ${group.requested_by}`}
+                  label={`درخواست توسط: ${group.requested_by}`}
                   size="small"
                   variant="outlined"
                 />
@@ -78,7 +78,7 @@ const GroupApprovalCard = ({ group, onSuccess, onError }) => {
             </Box>
 
             <Typography variant="body2" color="text.secondary">
-              {group.description || 'No description provided'}
+              {group.description || 'توضیحاتی ارائه نشده است'}
             </Typography>
 
             {group.category && (
@@ -99,7 +99,7 @@ const GroupApprovalCard = ({ group, onSuccess, onError }) => {
                 onClick={() => setShowApprovalDialog(true)}
                 disabled={isApproving || isRejecting}
               >
-                Approve
+                تأیید
               </Button>
               <Button
                 fullWidth
@@ -109,7 +109,7 @@ const GroupApprovalCard = ({ group, onSuccess, onError }) => {
                 onClick={() => setShowRejectDialog(true)}
                 disabled={isApproving || isRejecting}
               >
-                Reject
+                رد
               </Button>
             </Stack>
           </Stack>
@@ -123,32 +123,32 @@ const GroupApprovalCard = ({ group, onSuccess, onError }) => {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Approve Group: {group.name}</DialogTitle>
+        <DialogTitle>تأیید گروه: {group.name}</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
               required
               fullWidth
-              label="Telegram Invite Link"
+              label="لینک دعوت تلگرام"
               value={approvalData.telegram_invite_link}
               onChange={(e) =>
                 setApprovalData({ ...approvalData, telegram_invite_link: e.target.value })
               }
               placeholder="https://t.me/+..."
-              helperText="Required: Add the Telegram group invite link"
+              helperText="الزامی: لینک دعوت گروه تلگرام را اضافه کنید"
             />
 
             <FormControl fullWidth>
-              <InputLabel>Category</InputLabel>
+              <InputLabel>دسته‌بندی</InputLabel>
               <Select
                 value={approvalData.category_id}
                 onChange={(e) =>
                   setApprovalData({ ...approvalData, category_id: e.target.value })
                 }
-                label="Category"
+                label="دسته‌بندی"
               >
                 <MenuItem value="">
-                  <em>None</em>
+                  <em>هیچکدام</em>
                 </MenuItem>
                 {categories.map((cat) => (
                   <MenuItem key={cat.id} value={cat.id}>
@@ -160,35 +160,35 @@ const GroupApprovalCard = ({ group, onSuccess, onError }) => {
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowApprovalDialog(false)}>Cancel</Button>
+          <Button onClick={() => setShowApprovalDialog(false)}>لغو</Button>
           <Button
             onClick={handleApprove}
             variant="contained"
             color="success"
             disabled={isApproving}
           >
-            {isApproving ? 'Approving...' : 'Approve'}
+            {isApproving ? 'در حال تأیید...' : 'تأیید'}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Reject Confirmation Dialog */}
       <Dialog open={showRejectDialog} onClose={() => setShowRejectDialog(false)}>
-        <DialogTitle>Reject Group Request</DialogTitle>
+        <DialogTitle>رد درخواست گروه</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to reject the group request for "{group.name}"? This action cannot be undone.
+            آیا مطمئن هستید که می‌خواهید درخواست گروه "{group.name}" را رد کنید؟ این عملیات قابل بازگشت نیست.
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setShowRejectDialog(false)}>Cancel</Button>
+          <Button onClick={() => setShowRejectDialog(false)}>لغو</Button>
           <Button
             onClick={handleReject}
             variant="contained"
             color="error"
             disabled={isRejecting}
           >
-            {isRejecting ? 'Rejecting...' : 'Reject'}
+            {isRejecting ? 'در حال رد...' : 'رد'}
           </Button>
         </DialogActions>
       </Dialog>

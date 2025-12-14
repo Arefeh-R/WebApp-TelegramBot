@@ -53,8 +53,8 @@ const AuthLogin = () => {
           submit: null
         }}
         validationSchema={Yup.object().shape({
-          email: Yup.string().max(255).required('Email is required'),
-          password: Yup.string().max(255).required('Password is required')
+          email: Yup.string().max(255).required('ایمیل الزامی است'),
+          password: Yup.string().max(255).required('رمز عبور الزامی است')
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
           try {
@@ -79,7 +79,7 @@ const AuthLogin = () => {
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <Stack spacing={1}>
-                  <InputLabel htmlFor="email-login">Email Address</InputLabel>
+                  <InputLabel htmlFor="email-login">آدرس ایمیل</InputLabel>
                   <OutlinedInput
                     id="email-login"
                     type="email"
@@ -87,7 +87,7 @@ const AuthLogin = () => {
                     name="email"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="Enter email address"
+                    placeholder="ایمیل خود را وارد کنید"
                     fullWidth
                     error={Boolean(touched.email && errors.email)}
                   />
@@ -100,7 +100,7 @@ const AuthLogin = () => {
               </Grid>
               <Grid item xs={12}>
                 <Stack spacing={1}>
-                  <InputLabel htmlFor="password-login">Password</InputLabel>
+                  <InputLabel htmlFor="password-login">رمز عبور</InputLabel>
                   <OutlinedInput
                     fullWidth
                     error={Boolean(touched.password && errors.password)}
@@ -123,7 +123,7 @@ const AuthLogin = () => {
                         </IconButton>
                       </InputAdornment>
                     }
-                    placeholder="Enter password"
+                    placeholder="رمز عبور خود را وارد کنید"
                   />
                   {touched.password && errors.password && (
                     <FormHelperText error id="standard-weight-helper-text-password-login">
@@ -150,7 +150,7 @@ const AuthLogin = () => {
                     variant="contained"
                     color="primary"
                   >
-                    Login
+                    ورود
                   </Button>
                 </AnimateButton>
               </Grid>

@@ -39,7 +39,7 @@ export default function ReviewList({ reviews = [], onSubmit, onUpdate, onDelete 
 
   // Handle delete with confirmation
   const handleDeleteReview = async (reviewId) => {
-    if (window.confirm('Are you sure you want to delete this review?')) {
+    if (window.confirm('آیا مطمئن هستید که می‌خواهید این نقد را حذف کنید؟')) {
       await onDelete?.(reviewId);
     }
   };
@@ -89,7 +89,7 @@ export default function ReviewList({ reviews = [], onSubmit, onUpdate, onDelete 
                 size="large"
                 onClick={() => setShowForm(true)}
               >
-                Write a Review
+                نوشتن نقد
               </Button>
             </AnimateButton>
           ) : (
@@ -113,7 +113,7 @@ export default function ReviewList({ reviews = [], onSubmit, onUpdate, onDelete 
       {/* Not Logged In Message */}
       {!isLoggedIn && (
         <Alert severity="info">
-          Please log in to write a review
+          برای نوشتن نقد لطفا وارد شوید
         </Alert>
       )}
 
@@ -122,14 +122,14 @@ export default function ReviewList({ reviews = [], onSubmit, onUpdate, onDelete 
         <Alert severity="success" icon={false}>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="body2">
-              You have already reviewed this book
+              شما قبلا این کتاب را نقد کرده‌اید
             </Typography>
             <Button
               size="small"
               variant="outlined"
               onClick={() => handleEditReview(userReview)}
             >
-              Edit Review
+              ویرایش نقد
             </Button>
           </Stack>
         </Alert>
@@ -140,10 +140,10 @@ export default function ReviewList({ reviews = [], onSubmit, onUpdate, onDelete 
         <>
           <Stack direction="row" justifyContent="space-between" alignItems="center">
             <Typography variant="h5">
-              All Reviews
+              همه نقدها
             </Typography>
             <Chip
-              label={`${reviews.length} ${reviews.length === 1 ? 'review' : 'reviews'}`}
+              label={`${reviews.length} نقد`}
               color="primary"
               variant="outlined"
             />
@@ -157,10 +157,10 @@ export default function ReviewList({ reviews = [], onSubmit, onUpdate, onDelete 
         <Box sx={{ textAlign: 'center', py: 6 }}>
           <BookOutlined style={{ fontSize: 64, color: '#bbb', marginBottom: 16 }} />
           <Typography variant="h6" color="text.secondary" gutterBottom>
-            No reviews yet
+            هنوز نقدی ثبت نشده است
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Be the first to review this book!
+            اولین نفری باشید که این کتاب را نقد می‌کند!
           </Typography>
         </Box>
       ) : (

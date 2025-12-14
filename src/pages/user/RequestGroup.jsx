@@ -18,8 +18,8 @@ import { useRequestGroup, useGroupCategories } from 'hooks/useTelegramGroups';
 const DEFAULT_CATEGORIES = [
   { id: 'default_1', name: 'General' },
   { id: 'default_2', name: 'Book Lovers' },
-  { id: 'default_3', name: 'Gaming' },
-  { id: 'default_4', name: 'Tech & Programming' },
+  { id: 'default_3', name: 'Books in religion' },
+  { id: 'default_4', name: 'Tech & Programming books' },
   { id: 'default_5', name: 'Movies & TV Shows' },
   { id: 'other', name: 'Other (Create New)' }
 ];
@@ -78,17 +78,17 @@ const RequestGroup = () => {
 
     // Validation
     if (!formData.name.trim()) {
-      setError('Group name is required');
+      setError('نام گروه الزامی است');
       return;
     }
 
     if (!formData.category_id) {
-      setError('Please select a category');
+      setError('لطفاً یک دسته‌بندی انتخاب کنید');
       return;
     }
 
     if (showCustomCategory && !formData.custom_category.trim()) {
-      setError('Please enter a custom category name');
+      setError('لطفاً نام دسته‌بندی سفارشی را وارد کنید');
       return;
     }
 
@@ -126,17 +126,17 @@ const RequestGroup = () => {
       });
       setShowCustomCategory(false);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Failed to submit group request');
+      setError(err.response?.data?.detail || 'ارسال درخواست گروه با شکست مواجه شد');
     }
   };
 
   return (
-    <MainCard title="Request New Telegram Group">
+    <MainCard title="درخواست گروه تلگرام جدید">
       <Box component="form" onSubmit={handleSubmit}>
         <Stack spacing={3}>
           {success && (
             <Alert severity="success" onClose={() => setSuccess(false)}>
-              Your group request has been submitted and awaits admin approval.
+              درخواست گروه شما ارسال شد و در انتظار تأیید مدیر است.
             </Alert>
           )}
 
@@ -149,11 +149,11 @@ const RequestGroup = () => {
           <TextField
             required
             fullWidth
-            label="Group Name"
+            label="نام گروه"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            placeholder="Enter the name of your Telegram group"
+            placeholder="نام گروه تلگرام خود را وارد کنید"
             disabled={isLoading}
           />
 
@@ -161,22 +161,22 @@ const RequestGroup = () => {
             fullWidth
             multiline
             rows={4}
-            label="Description"
+            label="توضیحات"
             name="description"
             value={formData.description}
             onChange={handleChange}
-            placeholder="Describe the purpose and topic of your group"
+            placeholder="هدف و موضوع گروه خود را توضیح دهید"
             disabled={isLoading}
-            helperText="Optional: Provide details about what your group is about"
+            helperText="اختیاری: جزئیات بیشتری درباره گروه خود ارائه دهید"
           />
 
           <FormControl fullWidth required disabled={isLoading || loadingCategories}>
-            <InputLabel>Category</InputLabel>
+            <InputLabel>دسته‌بندی</InputLabel>
             <Select
               name="category_id"
               value={formData.category_id}
               onChange={handleChange}
-              label="Category"
+              label="دسته‌بندی"
             >
               {allCategories.map((category) => (
                 <MenuItem key={category.id} value={category.id}>
@@ -190,13 +190,13 @@ const RequestGroup = () => {
             <TextField
               required
               fullWidth
-              label="Custom Category Name"
+              label="نام دسته‌بندی سفارشی"
               name="custom_category"
               value={formData.custom_category}
               onChange={handleChange}
-              placeholder="Enter your category name"
+              placeholder="نام دسته‌بندی خود را وارد کنید"
               disabled={isLoading}
-              helperText="This category will be created for your group"
+              helperText="این دسته‌بندی برای گروه شما ایجاد خواهد شد"
             />
           )}
 
@@ -208,7 +208,7 @@ const RequestGroup = () => {
               startIcon={isLoading ? <CircularProgress size={20} /> : <SendOutlined />}
               disabled={isLoading || loadingCategories}
             >
-              {isLoading ? 'Submitting...' : 'Submit Request'}
+              {isLoading ? 'در حال ارسال...' : 'ارسال درخواست'}
             </Button>
           </Box>
         </Stack>

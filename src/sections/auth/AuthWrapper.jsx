@@ -6,7 +6,7 @@ import Stack from '@mui/material/Stack';
 import Box from '@mui/material/Box';
 
 // project imports
-import AuthFooter from 'components/cards/AuthFooter';
+import Footer from 'layout/Dashboard/Footer.jsx';
 import Logo from 'components/logo';
 import AuthCard from './AuthCard';
 
@@ -36,7 +36,7 @@ export default function AuthWrapper({ children }) {
           </Grid>
         </Box>
         <Box sx={{ p: 3 }} size={12}>
-          <AuthFooter />
+          <Footer />
         </Box>
       </Stack>
     </Box>

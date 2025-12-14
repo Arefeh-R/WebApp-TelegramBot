@@ -28,20 +28,20 @@ const ManageCategories = () => {
   const [deletingId, setDeletingId] = useState(null);
 
   const handleDelete = async (category) => {
-    if (!window.confirm(`Are you sure you want to delete "${category.name}"?`)) {
+    if (!window.confirm(`آیا مطمئن هستید که می‌خواهید "${category.name}" را حذف کنید؟`)) {
       return;
     }
 
     setDeletingId(category.id);
     try {
       await deleteCategory(category.id);
-      setMessage({ type: 'success', text: `Category "${category.name}" deleted successfully` });
+      setMessage({ type: 'success', text: `دسته‌بندی "${category.name}" با موفقیت حذف شد` });
       mutate();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       setMessage({ 
         type: 'error', 
-        text: error.response?.data?.detail || 'Failed to delete category' 
+        text: error.response?.data?.detail || 'حذف دسته‌بندی با شکست مواجه شد' 
       });
     } finally {
       setDeletingId(null);
@@ -72,7 +72,7 @@ const ManageCategories = () => {
 
   if (isLoading) {
     return (
-      <MainCard title="Manage Categories">
+      <MainCard title="مدیریت دسته‌بندی‌ها">
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
@@ -82,22 +82,22 @@ const ManageCategories = () => {
 
   if (isError) {
     return (
-      <MainCard title="Manage Categories">
-        <Alert severity="error">Failed to load categories</Alert>
+      <MainCard title="مدیریت دسته‌بندی‌ها">
+        <Alert severity="error">بارگذاری دسته‌بندی‌ها با شکست مواجه شد</Alert>
       </MainCard>
     );
   }
 
   return (
     <MainCard 
-      title="Manage Categories"
+      title="مدیریت دسته‌بندی‌ها"
       secondary={
         <Button
           variant="contained"
           startIcon={<PlusOutlined />}
           onClick={() => setShowForm(true)}
         >
-          Add Category
+          افزودن دسته‌بندی
         </Button>
       }
     >
@@ -114,7 +114,7 @@ const ManageCategories = () => {
       {categories.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="body1" color="text.secondary">
-            No categories found. Create your first category!
+            هیچ دسته‌بندی یافت نشد. اولین دسته‌بندی خود را ایجاد کنید!
           </Typography>
         </Box>
       ) : (
@@ -150,7 +150,7 @@ const ManageCategories = () => {
                   primary={
                     <Typography variant="h6">{category.name}</Typography>
                   }
-                  secondary={category.description || 'No description'}
+                  secondary={category.description || 'بدون توضیحات'}
                 />
               </ListItem>
               {index < categories.length - 1 && <Divider />}

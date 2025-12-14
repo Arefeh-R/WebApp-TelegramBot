@@ -63,10 +63,10 @@ const AuthRegister = () => {
           submit: null
         }}
         validationSchema={Yup.object().shape({
-          firstname: Yup.string().max(255).required('First Name is required'),
-          lastname: Yup.string().max(255).required('Last Name is required'),
-          email: Yup.string().email('Must be a valid email').max(255).required('Email is required'),
-          password: Yup.string().max(255).required('Password is required')
+          firstname: Yup.string().max(255).required('نام الزامی است'),
+          lastname: Yup.string().max(255).required('نام خانوادگی الزامی است'),
+          email: Yup.string().email('ایمیل معتبر نیست').max(255).required('ایمیل الزامی است'),
+          password: Yup.string().max(255).required('رمز عبور الزامی است')
         })}
         onSubmit={async (values, { setErrors, setStatus, setSubmitting }) => {
           try {
@@ -97,7 +97,7 @@ const AuthRegister = () => {
             <Grid container spacing={3}>
               <Grid item xs={12} md={6}>
                 <Stack spacing={1}>
-                  <InputLabel htmlFor="firstname-signup">First Name*</InputLabel>
+                  <InputLabel htmlFor="firstname-signup">نام*</InputLabel>
                   <OutlinedInput
                     id="firstname-signup"
                     type="firstname"
@@ -105,7 +105,7 @@ const AuthRegister = () => {
                     name="firstname"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="John"
+                    placeholder="علی"
                     fullWidth
                     error={Boolean(touched.firstname && errors.firstname)}
                   />
@@ -118,7 +118,7 @@ const AuthRegister = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <Stack spacing={1}>
-                  <InputLabel htmlFor="lastname-signup">Last Name*</InputLabel>
+                  <InputLabel htmlFor="lastname-signup">نام خانوادگی*</InputLabel>
                   <OutlinedInput
                     fullWidth
                     error={Boolean(touched.lastname && errors.lastname)}
@@ -128,7 +128,7 @@ const AuthRegister = () => {
                     name="lastname"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="Doe"
+                    placeholder="احمدی"
                     inputProps={{}}
                   />
                   {touched.lastname && errors.lastname && (
@@ -140,7 +140,7 @@ const AuthRegister = () => {
               </Grid>
               <Grid item xs={12}>
                 <Stack spacing={1}>
-                  <InputLabel htmlFor="email-signup">Email Address*</InputLabel>
+                  <InputLabel htmlFor="email-signup">آدرس ایمیل*</InputLabel>
                   <OutlinedInput
                     fullWidth
                     error={Boolean(touched.email && errors.email)}
@@ -150,7 +150,7 @@ const AuthRegister = () => {
                     name="email"
                     onBlur={handleBlur}
                     onChange={handleChange}
-                    placeholder="demo@company.com"
+                    placeholder="example@company.com"
                     inputProps={{}}
                   />
                   {touched.email && errors.email && (
@@ -162,7 +162,7 @@ const AuthRegister = () => {
               </Grid>
               <Grid item xs={12}>
                 <Stack spacing={1}>
-                  <InputLabel htmlFor="password-signup">Password</InputLabel>
+                  <InputLabel htmlFor="password-signup">رمز عبور</InputLabel>
                   <OutlinedInput
                     fullWidth
                     error={Boolean(touched.password && errors.password)}
@@ -226,7 +226,7 @@ const AuthRegister = () => {
                     variant="contained"
                     color="primary"
                   >
-                    Create Account
+                    ایجاد حساب کاربری
                   </Button>
                 </AnimateButton>
               </Grid>

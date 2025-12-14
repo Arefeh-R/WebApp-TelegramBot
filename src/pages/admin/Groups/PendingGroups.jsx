@@ -21,7 +21,7 @@ const PendingGroups = () => {
 
   if (isLoading) {
     return (
-      <MainCard title="Pending Group Requests">
+      <MainCard title="درخواست‌های گروه در انتظار تأیید">
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
@@ -31,14 +31,14 @@ const PendingGroups = () => {
 
   if (isError) {
     return (
-      <MainCard title="Pending Group Requests">
-        <Alert severity="error">Failed to load pending groups</Alert>
+      <MainCard title="درخواست‌های گروه در انتظار تأیید">
+        <Alert severity="error">بارگذاری گروه‌های در انتظار تأیید با شکست مواجه شد</Alert>
       </MainCard>
     );
   }
 
   return (
-    <MainCard title="Pending Group Requests">
+    <MainCard title="درخواست‌های گروه در انتظار تأیید">
       {message.text && (
         <Alert 
           severity={message.type} 
@@ -52,7 +52,7 @@ const PendingGroups = () => {
       {groups.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="body1" color="text.secondary">
-            No pending group requests
+            هیچ درخواست گروهی در انتظار نیست
           </Typography>
         </Box>
       ) : (

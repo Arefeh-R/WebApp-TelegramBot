@@ -15,7 +15,7 @@ const GroupCard = ({ group }) => {
           <Stack direction="row" spacing={1} alignItems="center">
             <TeamOutlined />
             <Typography variant="caption">
-              {group.member_count} members
+              {group.member_count} عضو
             </Typography>
           </Stack>
 
@@ -25,7 +25,7 @@ const GroupCard = ({ group }) => {
             href={group.telegram_invite_link}
             target="_blank"
           >
-            Join Group
+            عضویت در گروه
           </Button>
         </Stack>
       </CardContent>

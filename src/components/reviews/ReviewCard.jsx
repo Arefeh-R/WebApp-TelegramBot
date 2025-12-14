@@ -18,15 +18,10 @@ import MainCard from 'components/MainCard';
 export default function ReviewCard({ review, onEdit, onDelete, isOwner }) {
   // Format date
   const formattedDate = review.review_date
-    ? new Date(review.review_date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
-    : '';
+    ? new Date(review.review_date).toLocaleDateString('fa-IR') : '';
 
   // Handle reviewer display name
-  const reviewerName = review.reviewer_display || review.user?.username || review.user?.email || 'Anonymous';
+  const reviewerName = review.reviewer_display || review.user?.username || review.user?.email || 'ناشناس';
   const reviewerInitial = reviewerName.charAt(0).toUpperCase();
 
   // Parse rating as float
@@ -56,7 +51,7 @@ export default function ReviewCard({ review, onEdit, onDelete, isOwner }) {
                 {review.verified_purchase && (
                   <Chip
                     icon={<CheckCircleOutlined />}
-                    label="Verified"
+                    label="خرید تایید شده"
                     size="small"
                     color="success"
                     variant="outlined"
@@ -77,7 +72,7 @@ export default function ReviewCard({ review, onEdit, onDelete, isOwner }) {
                 size="small"
                 color="primary"
                 onClick={() => onEdit(review)}
-                aria-label="Edit review"
+                aria-label="ویرایش نقد"
               >
                 <EditOutlined />
               </IconButton>
@@ -85,7 +80,7 @@ export default function ReviewCard({ review, onEdit, onDelete, isOwner }) {
                 size="small"
                 color="error"
                 onClick={() => onDelete(review.review_id)}
-                aria-label="Delete review"
+                aria-label="حذف نقد"
               >
                 <DeleteOutlined />
               </IconButton>
@@ -104,7 +99,7 @@ export default function ReviewCard({ review, onEdit, onDelete, isOwner }) {
         <Stack direction="row" spacing={1} alignItems="center">
           <Rating value={ratingValue} readOnly precision={0.1} size="small" />
           <Typography variant="body2" color="text.secondary">
-            {ratingValue.toFixed(1)}/5.0
+            {ratingValue.toFixed(1)}
           </Typography>
         </Stack>
 
@@ -118,7 +113,7 @@ export default function ReviewCard({ review, onEdit, onDelete, isOwner }) {
         {/* Helpful Vote Count */}
         {review.helpful_vote > 0 && (
           <Typography variant="caption" color="text.secondary">
-            {review.helpful_vote} {review.helpful_vote === 1 ? 'person found' : 'people found'} this helpful
+            {review.helpful_vote} نفر این نقد را لایک کردند
           </Typography>
         )}
       </Stack>

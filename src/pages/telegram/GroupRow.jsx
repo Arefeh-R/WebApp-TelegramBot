@@ -31,7 +31,7 @@ const GroupRow = ({ group }) => {
             href={group.telegram_invite_link}
             target="_blank"
           >
-            Join
+            عضویت
           </Button>
         </Stack>
       </Stack>

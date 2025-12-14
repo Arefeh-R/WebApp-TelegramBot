@@ -25,7 +25,7 @@ export default function ReviewForm({ onSubmit, initialData = null, onCancel }) {
     e.preventDefault();
     
     if (rating === 0) {
-      alert('Please select a rating');
+      alert('لطفا امتیاز خود را انتخاب کنید');
       return;
     }
 
@@ -45,7 +45,7 @@ export default function ReviewForm({ onSubmit, initialData = null, onCancel }) {
         setReviewText('');
       }
     } catch (error) {
-      console.error('Error submitting review:', error);
+      console.error('خطا در ارسال نقد:', error);
     } finally {
       setSubmitting(false);
     }
@@ -54,14 +54,14 @@ export default function ReviewForm({ onSubmit, initialData = null, onCancel }) {
   return (
     <MainCard
       boxShadow
-      title={initialData ? 'Edit Review' : 'Write a Review'}
+      title={initialData ? 'ویرایش نقد' : 'نوشتن نقد'}
     >
       <form onSubmit={handleSubmit}>
         <Stack spacing={3}>
           {/* Rating */}
           <Box>
             <Typography variant="subtitle1" gutterBottom>
-              Your Rating *
+              امتیاز شما *
             </Typography>
             <Rating
               value={rating}
@@ -74,13 +74,13 @@ export default function ReviewForm({ onSubmit, initialData = null, onCancel }) {
           {/* Review Title */}
           <Box>
             <Typography variant="subtitle1" gutterBottom>
-              Review Title
+              عنوان نقد
             </Typography>
             <TextField
               fullWidth
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Sum up your review in a few words"
+              placeholder="نقد خود را در چند کلمه خلاصه کنید"
               variant="outlined"
             />
           </Box>
@@ -88,7 +88,7 @@ export default function ReviewForm({ onSubmit, initialData = null, onCancel }) {
           {/* Review Text */}
           <Box>
             <Typography variant="subtitle1" gutterBottom>
-              Your Review
+              متن نقد
             </Typography>
             <TextField
               fullWidth
@@ -96,7 +96,7 @@ export default function ReviewForm({ onSubmit, initialData = null, onCancel }) {
               rows={4}
               value={reviewText}
               onChange={(e) => setReviewText(e.target.value)}
-              placeholder="Share your thoughts about this book..."
+              placeholder="نظر خود را درباره این کتاب بنویسید..."
               variant="outlined"
             />
           </Box>
@@ -110,7 +110,7 @@ export default function ReviewForm({ onSubmit, initialData = null, onCancel }) {
                 disabled={submitting || rating === 0}
                 size="large"
               >
-                {submitting ? 'Submitting...' : (initialData ? 'Update Review' : 'Submit Review')}
+                {submitting ? 'در حال ارسال...' : (initialData ? 'بروزرسانی نقد' : 'ثبت نقد')}
               </Button>
             </AnimateButton>
             
@@ -121,7 +121,7 @@ export default function ReviewForm({ onSubmit, initialData = null, onCancel }) {
                 disabled={submitting}
                 size="large"
               >
-                Cancel
+                انصراف
               </Button>
             )}
           </Stack>

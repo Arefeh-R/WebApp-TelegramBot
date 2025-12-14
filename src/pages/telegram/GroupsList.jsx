@@ -14,8 +14,8 @@ const GroupsList = () => {
       acc[key] = {
         category: group.category || {
           id: 'uncategorized',
-          name: 'Uncategorized',
-          description: 'Groups without a category'
+          name: 'دسته‌بندی نشده',
+          description: 'گروه‌های بدون دسته‌بندی'
         },
         groups: []
       };
@@ -25,7 +25,7 @@ const GroupsList = () => {
   }, {});
 
   return (
-    <MainCard title="Telegram Forums">
+    <MainCard title="انجمن‌های تلگرام">
       {Object.values(grouped).map(section => (
         <CategorySection
           key={section.category.id}

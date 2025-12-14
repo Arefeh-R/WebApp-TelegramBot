@@ -30,20 +30,20 @@ const ManageGroups = () => {
   const [deletingId, setDeletingId] = useState(null);
 
   const handleDelete = async (group) => {
-    if (!window.confirm(`Are you sure you want to delete "${group.name}"?`)) {
+    if (!window.confirm(`آیا مطمئن هستید که می‌خواهید "${group.name}" را حذف کنید؟`)) {
       return;
     }
 
     setDeletingId(group.id);
     try {
       await deleteGroup(group.id);
-      setMessage({ type: 'success', text: `Group "${group.name}" deleted successfully` });
+      setMessage({ type: 'success', text: `گروه "${group.name}" با موفقیت حذف شد` });
       mutate();
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
     } catch (error) {
       setMessage({ 
         type: 'error', 
-        text: error.response?.data?.detail || 'Failed to delete group' 
+        text: error.response?.data?.detail || 'حذف گروه با شکست مواجه شد' 
       });
     } finally {
       setDeletingId(null);
@@ -64,7 +64,7 @@ const ManageGroups = () => {
 
   if (isLoading) {
     return (
-      <MainCard title="Manage Groups">
+      <MainCard title="مدیریت گروه‌ها">
         <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
           <CircularProgress />
         </Box>
@@ -74,14 +74,14 @@ const ManageGroups = () => {
 
   if (isError) {
     return (
-      <MainCard title="Manage Groups">
-        <Alert severity="error">Failed to load groups</Alert>
+      <MainCard title="مدیریت گروه‌ها">
+        <Alert severity="error">بارگذاری گروه‌ها با شکست مواجه شد</Alert>
       </MainCard>
     );
   }
 
   return (
-    <MainCard title="Manage Groups">
+    <MainCard title="مدیریت گروه‌ها">
       {message.text && (
         <Alert 
           severity={message.type} 
@@ -95,7 +95,7 @@ const ManageGroups = () => {
       {groups.length === 0 ? (
         <Box sx={{ textAlign: 'center', py: 4 }}>
           <Typography variant="body1" color="text.secondary">
-            No groups found
+            هیچ گروهی یافت نشد
           </Typography>
         </Box>
       ) : (
@@ -103,12 +103,12 @@ const ManageGroups = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>Name</TableCell>
-                <TableCell>Description</TableCell>
-                <TableCell>Category</TableCell>
-                <TableCell>Members</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell align="right">Actions</TableCell>
+                <TableCell>نام</TableCell>
+                <TableCell>توضیحات</TableCell>
+                <TableCell>دسته‌بندی</TableCell>
+                <TableCell>اعضا</TableCell>
+                <TableCell>وضعیت</TableCell>
+                <TableCell align="right">عملیات</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -132,7 +132,7 @@ const ManageGroups = () => {
                   <TableCell>{group.member_count || 0}</TableCell>
                   <TableCell>
                     <Chip
-                      label={group.is_approved ? 'Approved' : 'Pending'}
+                      label={group.is_approved ? 'تأیید شده' : 'در انتظار'}
                       color={group.is_approved ? 'success' : 'warning'}
                       size="small"
                     />
