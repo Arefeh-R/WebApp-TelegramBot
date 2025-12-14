@@ -221,7 +221,7 @@ function MyLibrary() {
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                     به مشاهده کتاب ها بروید و کتاب های مورد علاقه خود را اضافه کنید.
                   </Typography>
-                  <Button variant="contained" onClick={() => navigate('/books')}>
+                  <Button variant="contained" onClick={() => navigate('/dashboard/books')}>
                     مشاهده کتاب ها
                   </Button>
                 </Box>

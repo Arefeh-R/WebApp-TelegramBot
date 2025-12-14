@@ -7,6 +7,6 @@ import AdminRoutes from './AdminRoutes';
 
 // ==============================|| ROUTING RENDER ||============================== //
 
-const router = createBrowserRouter([MainRoutes, LoginRoutes, AdminRoutes], { basename: import.meta.env.VITE_APP_BASE_NAME });
+const router = createBrowserRouter([AdminRoutes, MainRoutes, LoginRoutes], { basename: import.meta.env.VITE_APP_BASE_NAME });
 
 export default router;
