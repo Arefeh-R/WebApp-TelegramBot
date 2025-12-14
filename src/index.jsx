@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client';
+import './locales/i18n';
 
 // style.scss
 import 'assets/style.css';
@@ -10,6 +11,12 @@ import 'simplebar-react/dist/simplebar.min.css';
 import 'assets/third-party/apex-chart.css';
 import 'assets/third-party/react-table.css';
 
+// persian fonts
+import '@fontsource/vazirmatn/300.css';
+import '@fontsource/vazirmatn/400.css';
+import '@fontsource/vazirmatn/500.css';
+import '@fontsource/vazirmatn/600.css';
+import '@fontsource/vazirmatn/700.css';
 
 import '@fontsource/public-sans/400.css';
 import '@fontsource/public-sans/500.css';

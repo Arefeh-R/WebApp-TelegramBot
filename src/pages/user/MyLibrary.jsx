@@ -38,9 +38,9 @@ function MyLibrary() {
   // Backend status values: 'wishlist', 'reading', 'Completed'
   const statuses = ['all', 'wishlist', 'reading', 'Completed'];
   const statusLabels = {
-    wishlist: 'Want to Read',
-    reading: 'Currently Reading',
-    Completed: 'Read'
+    wishlist: 'می خواهم بخوانم',
+    reading: 'در حال مطالعه',
+    completed: 'تمام شده'
   };
 
   // Initialize tab from URL parameter
@@ -114,9 +114,9 @@ function MyLibrary() {
       <Grid item xs={12} sx={{ mb: -2.25 }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
           <Box>
-            <Typography variant="h5">My Library</Typography>
+            <Typography variant="h5">کتابخانه من</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              Manage your reading collection
+              مدیریت کتاب های خود و پیگیری پیشرفت مطالعه شما
             </Typography>
           </Box>
           <Chip
@@ -133,7 +133,7 @@ function MyLibrary() {
         <MainCard>
           <Stack spacing={0.5}>
             <Typography variant="h6" color="text.secondary">
-              Total Books
+              همه کتاب های من
             </Typography>
             <Typography variant="h3" color="primary">
               {stats.all}
@@ -146,7 +146,7 @@ function MyLibrary() {
         <MainCard>
           <Stack spacing={0.5}>
             <Typography variant="h6" color="text.secondary">
-              Want to Read
+              می خواهم بخوانم
             </Typography>
             <Typography variant="h3" color="warning.main">
               {stats.wishlist}
@@ -159,7 +159,7 @@ function MyLibrary() {
         <MainCard>
           <Stack spacing={0.5}>
             <Typography variant="h6" color="text.secondary">
-              Reading
+              در حال مطالعه
             </Typography>
             <Typography variant="h3" color="info.main">
               {stats.reading}
@@ -172,7 +172,7 @@ function MyLibrary() {
         <MainCard>
           <Stack spacing={0.5}>
             <Typography variant="h6" color="text.secondary">
-              Completed
+              تمام شده
             </Typography>
             <Typography variant="h3" color="success.main">
               {stats.completed}
@@ -198,10 +198,10 @@ function MyLibrary() {
                 }
               }}
             >
-              <Tab icon={<BookOutlined />} iconPosition="start" label="All Books" />
-              <Tab icon={<HeartOutlined />} iconPosition="start" label="Want to Read" />
-              <Tab icon={<ClockCircleOutlined />} iconPosition="start" label="Reading" />
-              <Tab icon={<CheckCircleOutlined />} iconPosition="start" label="Completed" />
+              <Tab icon={<BookOutlined />} iconPosition="start" label="کل کتاب ها" />
+              <Tab icon={<HeartOutlined />} iconPosition="start" label="می خواهم بخوانم" />
+              <Tab icon={<ClockCircleOutlined />} iconPosition="start" label="در حال مطالعه" />
+              <Tab icon={<CheckCircleOutlined />} iconPosition="start" label="تمام شده" />
             </Tabs>
           </Box>
 
@@ -216,13 +216,13 @@ function MyLibrary() {
                 <Box sx={{ textAlign: 'center', py: 8 }}>
                   <BookOutlined style={{ fontSize: 80, color: '#bbb', marginBottom: 16 }} />
                   <Typography variant="h6" color="text.secondary" gutterBottom>
-                    No books in this category
+                    کتابخانه شما خالی است
                   </Typography>
                   <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Start building your library by adding books
+                    به مشاهده کتاب ها بروید و کتاب های مورد علاقه خود را اضافه کنید.
                   </Typography>
                   <Button variant="contained" onClick={() => navigate('/books')}>
-                    Browse Books
+                    مشاهده کتاب ها
                   </Button>
                 </Box>
               ) : (
@@ -276,9 +276,9 @@ function MyLibrary() {
                                 }
                               }}
                             >
-                              <MenuItem value="wishlist">Want to Read</MenuItem>
-                              <MenuItem value="reading">Currently Reading</MenuItem>
-                              <MenuItem value="Completed">Read</MenuItem>
+                              <MenuItem value="wishlist">می خواهم بخوانم</MenuItem>
+                              <MenuItem value="reading">در حال خواندن</MenuItem>
+                              <MenuItem value="completed">تمام شده</MenuItem>
                             </Select>
                           </FormControl>
 
@@ -290,10 +290,10 @@ function MyLibrary() {
                               startIcon={<EyeOutlined />}
                               onClick={(e) => {
                                 e.stopPropagation();
-                                navigate(`/books/${item.book.parent_asin || item.book.id}`);
+                                navigate(`/dashboard/books/${item.book.parent_asin || item.book.id}`);
                               }}
                             >
-                              View
+                              مشاهده کتاب
                             </Button>
                             <IconButton
                               color="error"

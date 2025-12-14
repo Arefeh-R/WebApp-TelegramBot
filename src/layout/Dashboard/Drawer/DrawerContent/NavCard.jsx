@@ -20,11 +20,11 @@ export default function NavCard() {
     <MainCard sx={{ bgcolor: 'grey.50', m: 3 }}>
       <Stack spacing={2}>
         <Typography variant="h5">
-          My Library
+          کتاب های شما
         </Typography>
 
         <Typography variant="body2" color="text.secondary">
-          Your reading progress
+          نمای کلی از وضعیت شما در کتابخانه
         </Typography>
 
         <Divider />
@@ -35,10 +35,10 @@ export default function NavCard() {
           </Stack>
         ) : (
           <Stack spacing={1.5}>
-            <StatRow icon={<BookOutlined />} label="Total" value={stats.total} />
-            <StatRow icon={<HeartOutlined />} label="Want to Read" value={stats.want} />
-            <StatRow icon={<ClockCircleOutlined />} label="Reading" value={stats.reading} />
-            <StatRow icon={<CheckCircleOutlined />} label="Completed" value={stats.read} />
+            <StatRow icon={<BookOutlined />} label="کل کتاب ها " value={stats.total} />
+            <StatRow icon={<HeartOutlined />} label="می خواهم بخوانم" value={stats.want} />
+            <StatRow icon={<ClockCircleOutlined />} label="در حال مطالعه" value={stats.reading} />
+            <StatRow icon={<CheckCircleOutlined />} label="تمام شده" value={stats.read} />
           </Stack>
         )}
       </Stack>

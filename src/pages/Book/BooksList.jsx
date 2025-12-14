@@ -35,7 +35,7 @@ function BooksList() {
               <Stack spacing={2} alignItems="center">
                 <CircularProgress size={60} />
                 <Typography variant="body1" color="text.secondary">
-                  Loading books...
+                 در حال بارگذاری کتاب ها...
                 </Typography>
               </Stack>
             </Box>
@@ -51,7 +51,7 @@ function BooksList() {
         <Grid item xs={12}>
           <MainCard>
             <Alert severity="error">
-              <Typography variant="h6">Error loading books</Typography>
+              <Typography variant="h6">خطا در بارگذاری کتاب ها</Typography>
               <Typography variant="body2">{booksError}</Typography>
             </Alert>
           </MainCard>
@@ -68,10 +68,10 @@ function BooksList() {
             <Box sx={{ textAlign: 'center', py: 8 }}>
               <BookOutlined style={{ fontSize: 80, color: '#bbb', marginBottom: 16 }} />
               <Typography variant="h4" color="text.secondary" gutterBottom>
-                No books found
+                کتابی یافت نشد
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Try adjusting your search or filters
+                هنوز هیچ کتابی در کتابخانه وجود ندارد. لطفاً بعداً دوباره بررسی کنید.
               </Typography>
             </Box>
           </MainCard>
@@ -85,7 +85,7 @@ function BooksList() {
       <Grid item xs={12}>
         <BookList
           books={books}
-          title="Browse Books"
+          title=""
           page={page}
           totalPages={totalPages}
           onPageChange={handlePageChange}

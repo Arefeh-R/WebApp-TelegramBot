@@ -14,12 +14,12 @@ const icons = {
 
 const library = {
   id: 'group-library',
-  title: 'Library',
+  title: 'کتابخانه',
   type: 'group',
   children: [
     {
       id: 'books',
-      title: 'Browse Books',
+      title: 'مشاهده کتاب ها',
       type: 'item',
       url: '/dashboard/books',
       icon: icons.EyeOutlined,
@@ -27,7 +27,7 @@ const library = {
     },
     {
       id: 'library',
-      title: 'My Library',
+      title: 'کتابخانه من',
       type: 'item',
       url: '/dashboard/library',
       icon: icons.ReadOutlined,
@@ -35,11 +35,11 @@ const library = {
     },
     {
       id: 'book-detail',
-      title: 'Book Details',
+      title: 'جزئیات کتاب',
       type: 'item',
-      url: '/dashboard/books',
+      url: '/dashboard/books/:id',
+      icon: icons.BookOutlined,
       breadcrumbs: true,  // Disable automatic breadcrumbs
-      hidden: true  // Hide from sidebar menu
     }
   ]
 };

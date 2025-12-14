@@ -12,7 +12,7 @@ const BookList = ({ books, title, page, totalPages, onPageChange }) => {
         <Stack spacing={1} sx={{ mb: 3 }}>
           <Typography variant="h3">{title}</Typography>
           <Typography variant="body2" color="text.secondary">
-            {books.length} books found
+            {books.length} کتاب در این صفحه
           </Typography>
         </Stack>
       )}

@@ -229,7 +229,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.24.7, @babel/runtime@npm:^7.26.0, @babel/runtime@npm:^7.28.4, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.7":
+"@babel/runtime@npm:^7.12.5, @babel/runtime@npm:^7.18.3, @babel/runtime@npm:^7.24.7, @babel/runtime@npm:^7.26.0, @babel/runtime@npm:^7.27.6, @babel/runtime@npm:^7.28.4, @babel/runtime@npm:^7.5.5, @babel/runtime@npm:^7.8.7":
   version: 7.28.4
   resolution: "@babel/runtime@npm:7.28.4"
   checksum: 10c0/792ce7af9750fb9b93879cc9d1db175701c4689da890e6ced242ea0207c9da411ccf16dc04e689cc01158b28d7898c40d75598f4559109f761c12ce01e959bf7
@@ -298,7 +298,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@emotion/cache@npm:11.14.0, @emotion/cache@npm:^11.14.0":
+"@emotion/cache@npm:^11.14.0":
   version: 11.14.0
   resolution: "@emotion/cache@npm:11.14.0"
   dependencies:
@@ -754,6 +754,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/vazirmatn@npm:^5.2.8":
+  version: 5.2.8
+  resolution: "@fontsource/vazirmatn@npm:5.2.8"
+  checksum: 10c0/c1e76de1f94e2394a50132f4ac35a28e9c61b52a66a8958b80aa699dd7812996eafdaefe5bef46a9ac2e11de758421645cc6443251c3795a78564116effc0669
+  languageName: node
+  linkType: hard
+
 "@humanfs/core@npm:^0.19.1":
   version: 0.19.1
   resolution: "@humanfs/core@npm:0.19.1"
@@ -894,6 +901,22 @@ __metadata:
   version: 7.3.4
   resolution: "@mui/core-downloads-tracker@npm:7.3.4"
   checksum: 10c0/938037e8a1141edf9bef744248dcddd91277d08ddf9de0a24d027fd8debea7bf81da22f01902d5979df4f9d3ef4931069131f2ce6e0c0d8e82a286896a1e372c
+  languageName: node
+  linkType: hard
+
+"@mui/icons-material@npm:^7.3.6":
+  version: 7.3.6
+  resolution: "@mui/icons-material@npm:7.3.6"
+  dependencies:
+    "@babel/runtime": "npm:^7.28.4"
+  peerDependencies:
+    "@mui/material": ^7.3.6
+    "@types/react": ^17.0.0 || ^18.0.0 || ^19.0.0
+    react: ^17.0.0 || ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@types/react":
+      optional: true
+  checksum: 10c0/ec0286beb22a7070566d6242410b75f4106e15b2ead7b5d5115f00e1c7fc70d44d47289a1d27059781d56907cf291e53261868dafd7dba2843245abe18799d65
   languageName: node
   linkType: hard
 
@@ -2092,6 +2115,13 @@ __metadata:
     shebang-command: "npm:^2.0.0"
     which: "npm:^2.0.1"
   checksum: 10c0/053ea8b2135caff68a9e81470e845613e374e7309a47731e81639de3eaeb90c3d01af0e0b44d2ab9d50b43467223b88567dfeb3262db942dc063b9976718ffc1
+  languageName: node
+  linkType: hard
+
+"cssjanus@npm:^2.0.1":
+  version: 2.3.0
+  resolution: "cssjanus@npm:2.3.0"
+  checksum: 10c0/b410c6f31c80947cc4508f232bab13beb3de6c38f1824962d12ef64b754d0191230efc2211815bc144ddbf50e509d63d0f120fc2402f657762e1f6bd60edf6a3
   languageName: node
   linkType: hard
 
@@ -3328,6 +3358,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"html-parse-stringify@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "html-parse-stringify@npm:3.0.1"
+  dependencies:
+    void-elements: "npm:3.1.0"
+  checksum: 10c0/159292753d48b84d216d61121054ae5a33466b3db5b446e2ffc093ac077a411a99ce6cbe0d18e55b87cf25fa3c5a86c4d8b130b9719ec9b66623259000c72c15
+  languageName: node
+  linkType: hard
+
 "http-cache-semantics@npm:^4.1.1":
   version: 4.2.0
   resolution: "http-cache-semantics@npm:4.2.0"
@@ -3352,6 +3391,20 @@ __metadata:
     agent-base: "npm:^7.1.2"
     debug: "npm:4"
   checksum: 10c0/f729219bc735edb621fa30e6e84e60ee5d00802b8247aac0d7b79b0bd6d4b3294737a337b93b86a0bd9e68099d031858a39260c976dc14cdbba238ba1f8779ac
+  languageName: node
+  linkType: hard
+
+"i18next@npm:^25.7.2":
+  version: 25.7.2
+  resolution: "i18next@npm:25.7.2"
+  dependencies:
+    "@babel/runtime": "npm:^7.28.4"
+  peerDependencies:
+    typescript: ^5
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 10c0/137782fdd8fc166fa5f74088db52c80ea7b2dc60fb8da7486d0213b28f41d68947041b6466489cfceb5c439630618a2b709a3c2d6b098740e3be9ce58e6ec1fd
   languageName: node
   linkType: hard
 
@@ -3926,14 +3979,16 @@ __metadata:
   dependencies:
     "@ant-design/colors": "npm:7.2.1"
     "@ant-design/icons": "npm:^6.1.0"
-    "@emotion/cache": "npm:11.14.0"
+    "@emotion/cache": "npm:^11.14.0"
     "@emotion/react": "npm:11.14.0"
     "@emotion/styled": "npm:11.14.1"
     "@eslint/compat": "npm:1.4.0"
     "@eslint/eslintrc": "npm:3.3.1"
     "@eslint/js": "npm:9.37.0"
     "@fontsource/public-sans": "npm:5.2.7"
+    "@fontsource/vazirmatn": "npm:^5.2.8"
     "@mui/base": "npm:5.0.0-beta.70"
+    "@mui/icons-material": "npm:^7.3.6"
     "@mui/lab": "npm:7.0.1-beta.18"
     "@mui/material": "npm:7.3.4"
     "@mui/system": "npm:7.3.3"
@@ -3950,16 +4005,21 @@ __metadata:
     eslint-plugin-react-hooks: "npm:7.0.0"
     formik: "npm:^2.4.9"
     framer-motion: "npm:12.23.24"
+    i18next: "npm:^25.7.2"
     lodash-es: "npm:4.17.21"
     prettier: "npm:3.6.2"
     react: "npm:19.2.0"
     react-device-detect: "npm:2.2.3"
     react-dom: "npm:19.2.0"
+    react-i18next: "npm:^16.5.0"
     react-number-format: "npm:5.4.4"
     react-router: "npm:7.9.4"
     react-router-dom: "npm:7.9.4"
     simplebar-react: "npm:3.3.2"
+    stylis: "npm:^4.3.6"
+    stylis-plugin-rtl: "npm:^2.1.1"
     swr: "npm:^2.3.7"
+    typeface-vazir: "npm:^1.0.1"
     vite: "npm:7.1.9"
     vite-jsconfig-paths: "npm:2.0.1"
     web-vitals: "npm:5.1.0"
@@ -4532,6 +4592,28 @@ __metadata:
   version: 2.0.4
   resolution: "react-fast-compare@npm:2.0.4"
   checksum: 10c0/f0300c677e95198b5f993cbb8a983dab09586157dc678f9e2b5b29ff941b6677a8776fbbdc425ce102fad86937e36bb45cfcfd797f006270b97ccf287ebfb885
+  languageName: node
+  linkType: hard
+
+"react-i18next@npm:^16.5.0":
+  version: 16.5.0
+  resolution: "react-i18next@npm:16.5.0"
+  dependencies:
+    "@babel/runtime": "npm:^7.27.6"
+    html-parse-stringify: "npm:^3.0.1"
+    use-sync-external-store: "npm:^1.6.0"
+  peerDependencies:
+    i18next: ">= 25.6.2"
+    react: ">= 16.8.0"
+    typescript: ^5
+  peerDependenciesMeta:
+    react-dom:
+      optional: true
+    react-native:
+      optional: true
+    typescript:
+      optional: true
+  checksum: 10c0/33ee736f5df01fbc3922f1c1b1e9f768c4930364a9f9695b5dcdf8ec997d8eee71c0fc7f2ccbd75f0d98aa2915890c4554fa4a6afe129582de50af84b1d959d8
   languageName: node
   linkType: hard
 
@@ -5231,10 +5313,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"stylis-plugin-rtl@npm:^2.1.1":
+  version: 2.1.1
+  resolution: "stylis-plugin-rtl@npm:2.1.1"
+  dependencies:
+    cssjanus: "npm:^2.0.1"
+  peerDependencies:
+    stylis: 4.x
+  checksum: 10c0/706640bba51ca75e3a824f781b59e8d8b8d034a10b839aa93daea166aac6cc67a4e7c063496ea8a09c396b639cff9859a42f5d03937d8f89f8922fd6c7435739
+  languageName: node
+  linkType: hard
+
 "stylis@npm:4.2.0":
   version: 4.2.0
   resolution: "stylis@npm:4.2.0"
   checksum: 10c0/a7128ad5a8ed72652c6eba46bed4f416521bc9745a460ef5741edc725252cebf36ee45e33a8615a7057403c93df0866ab9ee955960792db210bb80abd5ac6543
+  languageName: node
+  linkType: hard
+
+"stylis@npm:^4.3.6":
+  version: 4.3.6
+  resolution: "stylis@npm:4.3.6"
+  checksum: 10c0/e736d484983a34f7c65d362c67dc79b7bce388054b261c2b7b23d02eaaf280617033f65d44b1ea341854f4331a5074b885668ac8741f98c13a6cfd6443ae85d0
   languageName: node
   linkType: hard
 
@@ -5457,6 +5557,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"typeface-vazir@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "typeface-vazir@npm:1.0.1"
+  checksum: 10c0/b2be0ac0ce9196256cf9238c72444d56496c01a035eaf7743288df666c153a0eb2e8c5e1e977ff184d3a94ed1b42dbfa50c25f2a9683c1d69950845927edf894
+  languageName: node
+  linkType: hard
+
 "ua-parser-js@npm:^1.0.33":
   version: 1.0.41
   resolution: "ua-parser-js@npm:1.0.41"
@@ -5594,6 +5701,13 @@ __metadata:
   bin:
     vite: bin/vite.js
   checksum: 10c0/f628f903a137c1410232558bde99c223ea00a090bda6af77752c61f912955f0050aac12d3cfe024d08a0f150ff6fab61b3d0be75d634a59b94d49f525392e1f7
+  languageName: node
+  linkType: hard
+
+"void-elements@npm:3.1.0":
+  version: 3.1.0
+  resolution: "void-elements@npm:3.1.0"
+  checksum: 10c0/0b8686f9f9aa44012e9bd5eabf287ae0cde409b9a2854c5a2335cb83920c957668ac5876e3f0d158dd424744ac411a7270e64128556b451ed3bec875ef18534d
   languageName: node
   linkType: hard
 

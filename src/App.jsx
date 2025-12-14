@@ -5,7 +5,7 @@ import router from 'routes';
 import ThemeCustomization from 'themes';
 
 import ScrollTop from 'components/ScrollTop';
-import { JWTProvider } from 'contexts/JWTContext'; // added
+import { JWTProvider } from 'contexts/JWTContext'; 
 
 // ==============================|| APP - THEME, ROUTER, LOCAL ||============================== //
 
@@ -18,6 +18,5 @@ export default function App() {
           </JWTProvider>
         </ScrollTop>
       </ThemeCustomization>
-    
   );
 }

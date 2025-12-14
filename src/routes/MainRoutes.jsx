@@ -9,6 +9,10 @@ import AuthGuard from 'utils/route-guard/AuthGuard';
 const BooksListPage = Loadable(lazy(() => import('pages/Book/BooksList')));
 const BookDetailPage = Loadable(lazy(() => import('pages/Book/BookDetails')));
 
+//render telegram group pages
+const GroupsList = Loadable(lazy(() => import('pages/telegram/GroupsList')));
+const RequestGroup = Loadable(lazy(() => import('pages/user/RequestGroup')));
+
 //render user pages
 const MyLibraryPage = Loadable(lazy(() => import('pages/user/MyLibrary')));
 
@@ -58,6 +62,14 @@ const MainRoutes = {
         }
         
       ]
+    },
+    {
+      path: 'telegram/groups',
+      element: <GroupsList />
+    },    
+    {
+      path: 'telegram/request',
+      element: <RequestGroup />
     },
     {
       path: 'typography',

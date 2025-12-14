@@ -6,7 +6,8 @@ export const MINI_DRAWER_WIDTH = 60;
 
 
 const config = {
-  fontFamily: `'Public Sans', sans-serif`
+ fontFamily: `'Vazirmatn', sans-serif`,
+  direction: 'rtl'
 };
 
 export default config;
