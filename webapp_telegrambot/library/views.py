@@ -227,8 +227,25 @@ class UserBookViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return UserBook.objects.filter(user=self.request.user).select_related("book")
 
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+    def create(self, request, *args, **kwargs):
+        book_id = request.data.get("book_id")
+        status_value = request.data.get("status", "wishlist")
+
+        user_book, created = UserBook.objects.get_or_create(
+            user=request.user,
+            book_id=book_id,
+            defaults={"status": status_value}
+        )
+
+        if not created:
+            user_book.status = status_value
+            user_book.save()
+
+        serializer = self.get_serializer(user_book)
+        return Response(
+            serializer.data,
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        )
 
     @action(detail=False, methods=["get"])
     def by_status(self, request):

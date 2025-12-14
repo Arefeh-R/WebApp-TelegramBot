@@ -2,14 +2,18 @@ from django.forms import ValidationError
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Group, ForumTopic, GroupMembership, TelegramProfile, ForumTopic
-from .serializers import GroupSerializer, ForumTopicSerializer, TelegramProfileSerializer
+from .models import Group, ForumTopic, GroupCategory, GroupMembership, TelegramProfile, ForumTopic
+from .serializers import GroupAdminSerializer, GroupCategorySerializer, GroupSerializer, ForumTopicSerializer, TelegramProfileSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from .permissions import IsTelegramBot
 
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
-    serializer_class = GroupSerializer
+    
+    def get_serializer_class(self):
+        if self.request.user.is_staff:
+            return GroupAdminSerializer
+        return GroupSerializer
     
     def get_queryset(self):
         qs = super().get_queryset()
@@ -41,17 +45,32 @@ class GroupViewSet(viewsets.ModelViewSet):
     def request_group(self, request):
         name = request.data.get("name")
         description = request.data.get("description")
-
+        category_id = request.data.get("category_id")
+        category_name = request.data.get("category_name")
+        
         if not name:
             return Response({"detail": "Group name is required"}, status=status.HTTP_400_BAD_REQUEST)
         
         if Group.objects.filter(name=name).exists():
             return Response({"detail": "Group name already exists"}, status=status.HTTP_400_BAD_REQUEST)
         
+        category = None
+        if category_id:
+            try:
+                category = GroupCategory.objects.get(id=category_id)
+            except GroupCategory.DoesNotExist:
+                return Response({"detail": "Invalid category"}, status=status.HTTP_400_BAD_REQUEST)
+        elif category_name:
+            # Create or get category by name
+            category, created = GroupCategory.objects.get_or_create(
+                name=category_name,
+                defaults={'description': f'Category for {category_name} groups'}
+            )
+        
         group = Group.objects.create(
-            id=0,
             name=name,
             description=description or "",
+            category=category,
             requested_by=request.user,
             is_approved=False,
         )
@@ -138,3 +157,7 @@ class ForumTopicViewSet(viewsets.ModelViewSet):
         if count >= 50:
             raise ValidationError("Group has reached topic capacity (50).")
         serializer.save()
+        
+class GroupCategoryViewSet(viewsets.ModelViewSet):
+    queryset = GroupCategory.objects.all()
+    serializer_class = GroupCategorySerializer

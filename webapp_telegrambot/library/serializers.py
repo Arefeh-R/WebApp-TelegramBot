@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import Author, Book, Category, Review, Comment, UserBook
+from .models import Author, Book, Category, Review, Comment, UserBook, Image
 
 User = get_user_model()
 
@@ -23,6 +23,8 @@ class AuthorSerializer(serializers.ModelSerializer):
 class BookSerializer(serializers.ModelSerializer):
     authors = AuthorSerializer(many=True, read_only=True)
     categories = CategorySerializer(many=True, read_only=True)
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Book
         fields = [
@@ -39,7 +41,13 @@ class BookSerializer(serializers.ModelSerializer):
             "features",
             "created_at",
             "updated_at",
+            "image_url",
         ]
+        
+    def get_image_url(self, obj):
+        # related_name on Image model is "images"
+        first = getattr(obj, "images").first()
+        return first.large_url if first else None
 
 
 # Assuming your user model has a 'username' or 'get_full_name' method
@@ -88,16 +96,27 @@ class UserBookSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     book = BookSerializer(read_only=True)
 
+    book_id = serializers.PrimaryKeyRelatedField(
+        queryset=Book.objects.all(),
+        source="book",
+        write_only=True
+    )
+
     class Meta:
         model = UserBook
         fields = [
             "id",
             "user",
             "book",
+            "book_id",
             "status",
-            "progress",
             "created_at",
             "updated_at",
         ]
         read_only_fields = ["user", "created_at", "updated_at"]
 
+
+class ImageSrialixer(serializers.ModelSerializer):
+    class Meta:
+        model = Image 
+        fields = ['large_url']

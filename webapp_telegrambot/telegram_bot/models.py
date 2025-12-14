@@ -12,24 +12,27 @@ class TelegramProfile(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     class Meta:
         app_label = 'telegram_bot'
-    
+        
+class GroupCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    order = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        ordering = ['order']
+
+    def __str__(self):
+        return self.name
+
 class Group(models.Model):
-    id = models.BigIntegerField(primary_key=True,verbose_name='Telegram Group ID')
+    id = models.BigAutoField(primary_key=True)
+    telegram_group_id = models.BigIntegerField( null=True, blank=True, unique=True, verbose_name='Telegram Group ID')
+    category = models.ForeignKey(GroupCategory, on_delete=models.SET_NULL, null=True, related_name='groups',default=1)
     name = models.CharField(max_length=128, unique=True)
     description = models.TextField(blank=True)
     member_count = models.PositiveIntegerField(default=0)
     telegram_invite_link = models.URLField(blank=True, null=True)
-    requested_by = models.ForeignKey(
-        settings.AUTH_USER_MODEL, 
-        on_delete=models.SET_NULL, 
-        null=True, 
-        related_name='requested_groups'
-    )
-    members = models.ManyToManyField(
-        settings.AUTH_USER_MODEL, 
-        through='GroupMembership', 
-        related_name='joined_groups'
-    )
+    requested_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='requested_groups')
     is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -40,6 +43,7 @@ class Group(models.Model):
     def __str__(self):
         return self.name
 
+    ...
 
 class GroupMembership(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)

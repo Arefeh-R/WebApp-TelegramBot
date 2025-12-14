@@ -8,7 +8,7 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
     TokenVerifyView,
 )
-from telegram_bot.views import GroupViewSet, TelegramProfileViewSet, ForumTopicViewSet
+from telegram_bot.views import GroupCategoryViewSet, GroupViewSet, TelegramProfileViewSet, ForumTopicViewSet
 
 router = DefaultRouter()
 
@@ -36,13 +36,12 @@ flat_reviews_router.register(r'comments', CommentViewSet, basename='flat-review-
 router.register(r'users', UserViewSet, basename='user')
 
 
-#telegram bot routes
+#telegram routes
 router.register(r'groups', GroupViewSet, basename='group')
 router.register(r'telegram-profiles', TelegramProfileViewSet, basename='telegram-profile')
 router.register(r'topics', ForumTopicViewSet, basename='forum-topic')
 
-# groups_router = routers.NestedDefaultRouter(router, r'groups', lookup='group')
-# groups_router.register(r'topics', ForumTopicViewSet, basename='group-topics')
+router.register( r'group-categories', GroupCategoryViewSet, basename='group-category')
 
 
 urlpatterns = [
