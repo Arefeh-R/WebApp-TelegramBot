@@ -20,11 +20,11 @@ export default function HeaderContent() {
 
   return (
     <>
-      {!downLG && <Search />}
+
       {downLG && <Box sx={{ width: '100%', ml: 1 }} />}
       <IconButton
         component={Link}
-        href="https://github.com/codedthemes/mantis-free-react-admin-template"
+        href="https://github.com/Arefeh-R/WebApp-TelegramBot/tree/book-library-front/src"
         target="_blank"
         disableRipple
         color="secondary"
@@ -34,7 +34,7 @@ export default function HeaderContent() {
         <GithubOutlined />
       </IconButton>
 
-      <Notification />
+    
       {!downLG && <Profile />}
       {downLG && <MobileSection />}
     </>

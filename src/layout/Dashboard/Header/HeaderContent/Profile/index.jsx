@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useRef, useState, useContext } from 'react';
+import { useRef, useState } from 'react';
 
 // material-ui
 import { useTheme } from '@mui/material/styles';
@@ -23,14 +23,13 @@ import Avatar from 'components/@extended/Avatar';
 import MainCard from 'components/MainCard';
 import Transitions from 'components/@extended/Transitions';
 import IconButton from 'components/@extended/IconButton';
+import useAuth from 'hooks/useAuth';
 
 // assets
 import LogoutOutlined from '@ant-design/icons/LogoutOutlined';
 import SettingOutlined from '@ant-design/icons/SettingOutlined';
 import UserOutlined from '@ant-design/icons/UserOutlined';
-import avatar1 from 'assets/images/users/avatar-1.png';
 import { useNavigate } from 'react-router-dom';
-import JWTContext from 'contexts/JWTContext';
 
 // tab panel wrapper
 function TabPanel({ children, value, index, ...other }) {
@@ -52,7 +51,7 @@ function a11yProps(index) {
 
 export default function Profile() {
   const theme = useTheme();
-  const { logout } = useContext(JWTContext);
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const anchorRef = useRef(null);
@@ -79,13 +78,19 @@ export default function Profile() {
       await logout();
     } finally {
       setOpen(false);
-      navigate('/dashboard/default', { replace: true });
+      navigate('/login', { replace: true });
     }
   };
 
+  // Get user display information
+  const displayName = user?.display_name || user?.username || 'کاربر';
+  const userEmail = user?.email || '';
+  const avatarUrl = user?.avatar_url;
+  const userInitial = displayName.charAt(0).toUpperCase();
+
   return (
     <Box sx={{ flexShrink: 0, ml: 'auto' }}>
-      <Tooltip title="Profile" disableInteractive>
+      <Tooltip title="پروفایل" disableInteractive>
         <ButtonBase
           sx={(theme) => ({
             p: 0.25,
@@ -98,7 +103,14 @@ export default function Profile() {
           aria-haspopup="true"
           onClick={handleToggle}
         >
-          <Avatar alt="profile user" src={avatar1} size="sm" sx={{ '&:hover': { outline: '1px solid', outlineColor: 'primary.main' } }} />
+          <Avatar 
+            alt={displayName} 
+            src={avatarUrl} 
+            size="sm" 
+            sx={{ '&:hover': { outline: '1px solid', outlineColor: 'primary.main' } }}
+          >
+            {!avatarUrl && userInitial}
+          </Avatar>
         </ButtonBase>
       </Tooltip>
       <Popper
@@ -128,17 +140,19 @@ export default function Profile() {
                     <Grid container sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
                       <Grid>
                         <Stack direction="row" sx={{ gap: 1.25, alignItems: 'center' }}>
-                          <Avatar alt="profile user" src={avatar1} sx={{ width: 32, height: 32 }} />
+                          <Avatar alt={displayName} src={avatarUrl} sx={{ width: 32, height: 32 }}>
+                            {!avatarUrl && userInitial}
+                          </Avatar>
                           <Stack>
-                            <Typography variant="h6">John Doe</Typography>
+                            <Typography variant="h6">{displayName}</Typography>
                             <Typography variant="body2" color="text.secondary">
-                              UI/UX Designer
+                              {userEmail}
                             </Typography>
                           </Stack>
                         </Stack>
                       </Grid>
                       <Grid>
-                        <Tooltip title="Logout">
+                        <Tooltip title="خروج">
                           <IconButton size="large" sx={{ color: 'text.primary' }} onClick={handleLogout}>
                             <LogoutOutlined />
                           </IconButton>
@@ -162,7 +176,7 @@ export default function Profile() {
                           }
                         }}
                         icon={<UserOutlined />}
-                        label="Profile"
+                        label="پروفایل"
                         {...a11yProps(0)}
                       />
                       <Tab
@@ -178,7 +192,7 @@ export default function Profile() {
                           }
                         }}
                         icon={<SettingOutlined />}
-                        label="Setting"
+                        label="تنظیمات"
                         {...a11yProps(1)}
                       />
                     </Tabs>

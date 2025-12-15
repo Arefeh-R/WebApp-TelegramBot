@@ -1,16 +1,15 @@
 // project import
-import dashboard from './dashboard';
 import pages from './page';
-import utilities from './utilities';
 import support from './support';
 import library from './library';
 import telegram from './telegram';
 import admin from './admin';
+import search from './search';
 
 // ==============================|| MENU ITEMS ||============================== //
 
 const menuItems = {
-  items: [dashboard,library, telegram, admin, pages, utilities, support]
+  items: [library,search, telegram, admin, pages  ]
 };
 
 export default menuItems;

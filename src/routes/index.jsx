@@ -4,9 +4,10 @@ import { createBrowserRouter } from 'react-router-dom';
 import MainRoutes from './MainRoutes';
 import LoginRoutes from './LoginRoutes';
 import AdminRoutes from './AdminRoutes';
+import SearchRoutes from './SearchRoutes';
 
 // ==============================|| ROUTING RENDER ||============================== //
 
-const router = createBrowserRouter([AdminRoutes, MainRoutes, LoginRoutes], { basename: import.meta.env.VITE_APP_BASE_NAME });
+const router = createBrowserRouter([AdminRoutes, MainRoutes, LoginRoutes, SearchRoutes], { basename: import.meta.env.VITE_APP_BASE_NAME });
 
 export default router;

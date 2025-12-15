@@ -17,7 +17,10 @@ const RequestGroup = Loadable(lazy(() => import('pages/user/RequestGroup')));
 const MyLibraryPage = Loadable(lazy(() => import('pages/user/MyLibrary')));
 
 // render- Dashboard
-const DashboardDefault = Loadable(lazy(() => import('pages/dashboard/default')));
+const ProfileView = Loadable(lazy(() => import('pages/profile/ProfileView')));
+const ProfileEdit = Loadable(lazy(() => import('pages/profile/ProfileEdit')));
+const AccountSettings = Loadable(lazy(() => import('pages/settings/AccountSettings')));
+const PasswordChange = Loadable(lazy(() => import('pages/settings/PasswordChange')));
 
 // render - color
 const Color = Loadable(lazy(() => import('pages/component-overview/color')));
@@ -35,14 +38,35 @@ const MainRoutes = {
   children: [
     {
       path: '/',
-      element: <DashboardDefault />
+      element: <BooksListPage />
+    },
+    {
+      path: 'profile',
+      element: <ProfileView />
+    },
+    {
+      path: 'profile/edit',
+      element: <ProfileEdit />
+    },
+    {
+      path: 'settings',
+      children: [
+        {
+          path: 'account',
+          element: <AccountSettings />
+        },
+        {
+          path: 'password',
+          element: <PasswordChange />
+        }
+      ]
     },
     {
       path: 'dashboard',
       children: [
         {
           path: 'default',
-          element: <DashboardDefault />
+          element: <BooksListPage />
         },
         {
           path: 'library',

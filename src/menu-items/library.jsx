@@ -1,4 +1,3 @@
-// src/menu-items/library.js
 
 // assets
 import { BookOutlined, ReadOutlined,EyeOutlined } from '@ant-design/icons';
