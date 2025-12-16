@@ -19,9 +19,7 @@ const GroupRow = ({ group }) => {
         <Stack spacing={0.5} alignItems="flex-end">
           <Stack direction="row" spacing={0.5} alignItems="center">
             <TeamOutlined />
-            <Typography variant="caption">
-              {group.member_count}
-            </Typography>
+
           </Stack>
 
           <Button
