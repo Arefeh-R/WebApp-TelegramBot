@@ -226,7 +226,6 @@ async def inline_book_search(inline_query: InlineQuery):
     url = f"{DJANGO_API_BASE_URL}/books/"
     params = {
         'search': query,
-        'ordering': '-rating_number'
     }
     
     results = []
@@ -259,7 +258,7 @@ async def inline_book_search(inline_query: InlineQuery):
                             author_name = authors[0].get('name', 'نامشخص') if authors else 'نامشخص'
                             rating = book.get("average_rating", "ندارد")
                             book_id = book.get("parent_asin", "")
-                            cover = book.get("cover", "")
+                            cover = book.get("image_url", "")
                             isbn = book.get('isbn_13') or book.get('isbn_10', 'ندارد')
                             rating_count = book.get('rating_number', 0)
                             

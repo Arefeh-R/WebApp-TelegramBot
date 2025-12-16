@@ -4,6 +4,7 @@ from aiogram.filters import Command, BaseFilter
 from aiogram.enums.chat_type import ChatType
 from ..config import DJANGO_API_BASE_URL ,BOT_USERNAME, BOT_PASSWORD
 from ..utils.token_fetcher import get_valid_access_token
+from aiogram.types import ChatInviteLink
 
 API_ENDPOINT = f"{DJANGO_API_BASE_URL}/groups/"
 COMMAND_NAME = "register_group" 
@@ -50,14 +51,25 @@ async def register_group_handler(message: types.Message) -> None:
     if not access_token:
         await message.answer("❌ **Error:** Failed to retrieve authentication token.")
         return
+ 
+    try:
+        invite_link: ChatInviteLink = await message.bot.create_chat_invite_link(
+            chat_id=chat_id,
+            creates_join_request=False  # set True if you want admin approval
+        )
+        telegram_invite_link = invite_link.invite_link
+    except Exception as e:
+        await message.answer("❌ Bot must be admin with invite permission.")
+        return
     
     # 1. Prepare the Data Payload
     data = {
-        "id": chat_id,
+        "telegram_group_id": chat_id,
         "name": chat_name,
         "description": f"Registered via bot command {COMMAND_NAME}",
         "created_by": None,
-        "is_approved": True
+        "is_approved": True,
+        "telegram_invite_link": telegram_invite_link
     }
     
     headers = {

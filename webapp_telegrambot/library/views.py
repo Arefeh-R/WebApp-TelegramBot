@@ -89,7 +89,7 @@ class BookViewSet(viewsets.ModelViewSet):
 
         if not data:
             return Response(
-                {"detail": "Book not found via Open Library API for the given query."},
+                {"error": "Book not found via Open Library API for the given query."},
                 status=status.HTTP_404_NOT_FOUND,
             )
         

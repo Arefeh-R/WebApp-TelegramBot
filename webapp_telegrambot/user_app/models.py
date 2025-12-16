@@ -5,7 +5,6 @@ from django.db import models
 
 class CustomUser(AbstractUser):
     
-    # === 1. User Type Definitions (For Project Roles) ===
     class UserType(models.TextChoices):
         APP_USER = 'AU', 'App User'
         SITE_ADMIN = 'SA', 'Site Admin'
@@ -86,7 +85,7 @@ class CustomUser(AbstractUser):
             self.is_superuser = True
         elif self.user_type == self.UserType.BOT:
             self.is_staff = True
-            self.is_superuser = False # Bots shouldn't be superusers typically
+            self.is_superuser = False 
         elif self.user_type == self.UserType.APP_USER:
             self.is_staff = False
             self.is_superuser = False

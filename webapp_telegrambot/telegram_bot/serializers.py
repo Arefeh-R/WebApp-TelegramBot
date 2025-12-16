@@ -40,7 +40,20 @@ class GroupSerializer(serializers.ModelSerializer):
             )
         return super().create(validated_data)
 
+# telegram_bot/serializers.py (within GroupAdminSerializer)
+
 class GroupAdminSerializer(serializers.ModelSerializer):
+    # Added the category field for read access
+    category = GroupCategorySerializer(read_only=True)
+    
+    # Added category_id for write access
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=GroupCategory.objects.all(),
+        source='category',
+        write_only=True,
+        required=False
+    )
+    
     class Meta:
         model = Group
         fields = [
@@ -50,7 +63,9 @@ class GroupAdminSerializer(serializers.ModelSerializer):
             'telegram_group_id',
             'member_count',
             'is_approved',
-            'category'
+            'category',
+            'category_id',                    
+            'telegram_invite_link'            
         ]
 
     def validate(self, data):
@@ -58,9 +73,14 @@ class GroupAdminSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "telegram_group_id is required when approving a group"
             )
+        
+        if data.get('is_approved') == True and not data.get('telegram_invite_link'):
+            raise serializers.ValidationError(
+                {"telegram_invite_link": "Invite link is required when approving a group."}
+            )
+            
         return data
-
-
+    
 class TelegramProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = TelegramProfile

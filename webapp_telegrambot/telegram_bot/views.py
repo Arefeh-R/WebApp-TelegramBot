@@ -1,4 +1,4 @@
-from django.forms import ValidationError
+from django_filters.rest_framework import DjangoFilterBackend 
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -9,21 +9,30 @@ from .permissions import IsTelegramBot
 
 class GroupViewSet(viewsets.ModelViewSet):
     queryset = Group.objects.all()
-    
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['is_approved', 'category']
+
+    def get_permissions(self):
+        if self.action in ['destroy', 'update', 'partial_update']:
+            permission_classes = [permissions.IsAdminUser]
+        elif self.action in ['create', 'request_group']:
+            permission_classes = [permissions.IsAuthenticated]
+        else:
+            permission_classes = [permissions.AllowAny]
+        return [permission() for permission in permission_classes]
+
     def get_serializer_class(self):
-        if self.request.user.is_staff:
+        if self.request.user.is_staff: 
             return GroupAdminSerializer
         return GroupSerializer
     
     def get_queryset(self):
         qs = super().get_queryset()
         user = self.request.user
-
-        if not user.is_authenticated or not user.is_staff:
-            qs = qs.filter(is_approved=True)
-
-        return qs
-    
+        if user.is_authenticated and user.is_staff:
+            return qs
+        return qs.filter(is_approved=True)
+        
     @action(detail=True, methods=['post'])
     def join(self, request, pk=None):
         group = self.get_object()
@@ -158,6 +167,15 @@ class ForumTopicViewSet(viewsets.ModelViewSet):
             raise ValidationError("Group has reached topic capacity (50).")
         serializer.save()
         
+# telegram_bot/views.py (within GroupCategoryViewSet)
+
 class GroupCategoryViewSet(viewsets.ModelViewSet):
     queryset = GroupCategory.objects.all()
     serializer_class = GroupCategorySerializer
+    
+    def get_permissions(self):
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            permission_classes = [permissions.IsAdminUser]
+        else:
+            permission_classes = [permissions.AllowAny]
+        return [permission() for permission in permission_classes]
